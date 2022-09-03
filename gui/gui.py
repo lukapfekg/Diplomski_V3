@@ -1,21 +1,31 @@
 import tkinter
 import tkinter as tk
+import os
 from os import *
 from tkinter import filedialog
 
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
-# from gui.secondScreen import SecondScreen
-from gui.util_gui import calculate_size
+from gui.util_gui import calculate_size, get_histogram, write_array_to_file
 from jpeg.compression import image_compression
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
+##################################################
+import matplotlib
 
-# from util_gui import calculate_size
+matplotlib.use('TkAgg')
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
+
+
+###################################################
 
 class InitialScreen:
 
@@ -173,7 +183,8 @@ class InitialScreen:
     def drag_and_drop_image(self, event):
         filename = event.data
         self.filename = filename
-        if filename is not None and (".jpg" in filename or ".png" in filename or '.tif' in filename or '.bmp' in filename):
+        if filename is not None and (
+                ".jpg" in filename or ".png" in filename or '.tif' in filename or '.bmp' in filename):
             self.display_text.set(filename)
             self.display_image(filename)
 
@@ -189,6 +200,8 @@ class SecondScreen:
         self.filename = filename
         self.image_height = 640
         self.image_width = 540
+        self.histo_old = None
+        self.histo_new = None
         self.canvas = tk.Canvas(root, height=900, width=1500, bg="#263D42")
 
         # old image frame
@@ -215,10 +228,15 @@ class SecondScreen:
                                         relief='ridge')
         self.new_img_canvas.pack()
 
-        # button
+        # new compression button
         button = tk.Button(self.button_frame, text="Return", padx=10, pady=10, fg="white", bg="#263D42")
         button.configure(command=self.change_canvas, height=2)
-        button.pack(pady=11)
+        button.pack(side=tk.LEFT)
+
+        # histo button
+        histo_button = tk.Button(self.button_frame, text="Info", padx=10, pady=10, fg="white", bg="#263D42")
+        histo_button.configure(command=self.to_histo, height=2)
+        histo_button.pack(pady=11, padx=20)
 
         self.display_images()
 
@@ -231,12 +249,19 @@ class SecondScreen:
         os.remove("temp/decompressed.jpg")
         InitialScreen(self.root)
 
+    def to_histo(self):
+        self.canvas.destroy()
+        HistoScreen(self.root, self.filename, self.histo_old, self.histo_new)
+
     def display_images(self):
         self.old_img_canvas.destroy()
 
         self.old_image = Image.open(self.filename)
         w, h = self.old_image.size
         w, h = calculate_size(self.image_width, self.image_height, w, h)
+
+        image = np.array(self.old_image)
+        threading.Thread(target=self.get_histo, args=[image, True]).start()
 
         # self.old_image.thumbnail((w, h), Image.ANTIALIAS)
 
@@ -260,6 +285,9 @@ class SecondScreen:
         w, h = self.new_image.size
         w, h = calculate_size(self.image_width, self.image_height, w, h)
 
+        image = np.array(self.new_image)
+        threading.Thread(target=self.get_histo, args=[image, False]).start()
+
         # self.new_image.thumbnail((w, h), Image.ANTIALIAS)
         self.new_image = self.new_image.resize((w, h), Image.ANTIALIAS)
 
@@ -268,3 +296,69 @@ class SecondScreen:
                                         relief='ridge')
         self.new_img_canvas.create_image(0, 0, anchor=tk.NW, image=self.disp_new_image)
         self.new_img_canvas.pack()
+
+    def get_histo(self, image, old=True):
+        keys, values = get_histogram(image.flatten())
+        histo = list(np.zeros(256).astype(int))
+
+        for k, i in enumerate(keys):
+            histo[k] = values[i]
+
+        if old:
+            self.histo_old = histo
+        else:
+            self.histo_new = histo
+
+
+class HistoScreen:
+    def __init__(self, root, filename, histo_before, histo_after):
+        self.new_image = None
+        self.disp_old_image = None
+        self.old_image = None
+        self.root = root
+        self.filename = filename
+        self.image_height = 640
+        self.image_width = 540
+        self.histo_before = histo_before
+        self.histo_after = histo_after
+        self.canvas = tk.Canvas(root, height=900, width=1500, bg="#263D42")
+
+        # old image frame
+        self.frame = tk.Frame(self.canvas, bg="#354552")
+        self.frame.place(relheight=0.8, relwidth=0.45, relx=0.025, rely=0.05)
+
+        # new image frame
+        self.frame2 = tk.Frame(self.canvas, bg="#263D42")
+        self.frame2.place(relheight=0.8, relwidth=0.45, relx=0.525, rely=0.05)
+
+        # button_frame
+        self.button_frame = tk.Frame(self.canvas, bg="#354552")
+        self.button_frame.place(relheight=0.1, relwidth=0.95, relx=0.025, rely=0.875)
+
+        # button to second screen
+        button = tk.Button(self.button_frame, text="Return", padx=10, pady=10, fg="white", bg="#263D42")
+        button.configure(command=self.to_second_screen, height=2)
+        button.pack(pady=11)
+
+        self.plot_histo(self.frame, self.histo_before)
+        self.plot_histo(self.frame2, self.histo_after)
+
+        self.canvas.pack()
+
+    def to_second_screen(self):
+        self.canvas.destroy()
+        SecondScreen(self.root, self.filename)
+
+    def plot_histo(self, frame, histo):
+        # fig
+        fig = Figure(figsize=(8, 8), dpi=100)
+
+        bins = [i for i in range(256)]
+
+        plot1 = fig.add_subplot(111)
+        plot1.bar(bins, histo)
+
+        canvas = FigureCanvasTkAgg(fig, master=frame)
+        canvas.draw()
+
+        canvas.get_tk_widget().pack()
