@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import time
 from collections import Counter
+import math
 
 from PIL import ImageTk, Image
 
@@ -34,23 +35,10 @@ def write_array_to_file(arr, name):
     f.close()
 
 
-# image = Image.open("../temp/decompressed.jpg").convert('L')
-# image = np.array(image)
-#
-# image1 = image.flatten()
-#
-# keys, values = get_histogram(image1)
-#
-# hist = list(np.zeros(256).astype(int))
-#
-# for k, i in enumerate(keys):
-#     hist[k] = values[i]
-#
-# a, b = image.shape
-# print(a * b)
-#
-# print(sum(hist))
-#
-# f = open("hist.txt", 'w')
-# f.write(str(hist))
-# f.close()
+def convert_bits(bits):
+    size_name = ['B', 'KB', 'MB', 'GB']
+    i = int(math.log(bits, 1024))
+    res = round(bits / math.pow(1024, i), 2)
+    return f"{res}{size_name[i]}"
+
+

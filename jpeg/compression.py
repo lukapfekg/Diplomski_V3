@@ -71,14 +71,13 @@ def image_compression(image):
         h, w = image.shape
         print("compression rate:", h * w * 8 / len(out_image))
 
-        f = open("compressed.txt", 'w')
+        f = open("temp/compressed.txt", 'w')
         f.write(out_image)
         f.close()
 
         return out_image
 
     else:
-
         y = image[:, :, 0]
         cr = image[:, :, 1]
         cb = image[:, :, 2]
@@ -95,4 +94,4 @@ def image_compression(image):
         print("size after compression :", siz)
         print("compression rate:", height * width * planes * 8 / siz)
 
-        return out_image
+        return out_image, siz
