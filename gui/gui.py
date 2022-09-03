@@ -288,7 +288,6 @@ class SecondScreen:
         image = np.array(self.new_image)
         threading.Thread(target=self.get_histo, args=[image, False]).start()
 
-        # self.new_image.thumbnail((w, h), Image.ANTIALIAS)
         self.new_image = self.new_image.resize((w, h), Image.ANTIALIAS)
 
         self.disp_new_image = ImageTk.PhotoImage(self.new_image)
