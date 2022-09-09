@@ -8,6 +8,7 @@ from tkinter import filedialog
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
+from gui.chooseColorSpace import ChooseColorSpace
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
@@ -64,13 +65,18 @@ class InitialScreen:
         self.img_canvas.pack()
 
         # button frame
-        self.button_frame = tk.Frame(self.canvas, bg="#354552")
-        self.button_frame.place(relwidth=0.125, relheight=0.5, relx=0.86, rely=0.25)
+        self.button_frame = tk.Frame(self.canvas, bg="#263D42")
+        self.button_frame.place(relwidth=0.125, relheight=0.3, relx=0.86, rely=0.3)
 
         # next canvas button
-        button_next = tk.Button(self.button_frame, text="Change window", height=5, width=15, fg="white", bg="#263D42")
-        button_next.configure(command=self.change_canvas)
-        button_next.pack(side=tkinter.TOP, pady=10)
+        button_JPEG = tk.Button(self.button_frame, text="JPEG", height=5, width=15, fg="white", bg="#263D42")
+        button_JPEG.configure(command=self.change_canvas)
+        button_JPEG.pack(side=tkinter.TOP, pady=10)
+
+        button_next = tk.Button(self.button_frame, text="Partial compression", height=5, width=15, fg="white",
+                                bg="#263D42")
+        button_next.configure(command=self.partial_compression)
+        button_next.pack(side=tkinter.BOTTOM, pady=10)
 
         # text frame
         self.text_frame = tk.Frame(self.canvas, bg="#263D42")
@@ -94,6 +100,11 @@ class InitialScreen:
         if self.has_image:
             self.canvas.destroy()
             SecondScreen(self.root, self.filename, self.size_old, self.size_new)
+
+    def partial_compression(self):
+        if self.has_image:
+            self.canvas.destroy()
+            ChooseColorSpace(self.root, self.filename)
 
     def search_image(self):
         filename = filedialog.askopenfilename(initialdir="Examples/", title="Select file",
