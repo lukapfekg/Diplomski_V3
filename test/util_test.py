@@ -1,14 +1,13 @@
 import skimage.measure
 from skimage.io import imread
+import os
 
-filenames = ["../Examples/miner.jpg", "temp/decompressed.jpg"]
+f = open("bitstring.dat", 'r')
 
-img = imread(filenames[0])
-entropy = skimage.measure.shannon_entropy(img)
-print(entropy)
+a = f.readline()
 
-img = imread(filenames[1])
-entropy = skimage.measure.shannon_entropy(img)
-print(entropy)
+print(a)
+
+
 
 
