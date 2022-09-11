@@ -10,6 +10,7 @@ from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
 # from gui.chooseColorSpace import ChooseColorSpace
+from gui.DCT import ChooseDCT
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
@@ -21,12 +22,13 @@ from gui.util_gui import calculate_size
 
 class ChooseColorSpace:
 
-    def __init__(self, root, filename):
+    def __init__(self, root, filename, out):
         self.drag_and_drop_img = None
         self.size_old = None
         self.filename = filename
         self.img = None
         self.root = root
+        self.out = out
 
         self.height = 900
         self.width = 1500
@@ -90,9 +92,17 @@ class ChooseColorSpace:
         s = self.clicked.get()
 
         if s in self.options:
+            self.canvas.destroy()
+
             if s == 'RGB':
                 image = Image.open(self.filename)
                 image = np.array(image)
+                r = image[:, :, 0]
+                g = image[:, :, 1]
+                b = image[:, :, 2]
+                print("rgb")
+                self.out = self.out + 'R;'
+                ChooseDCT(self.root, s, r, g, b, self.out)
 
             else:
                 image = Image.open(self.filename).convert('YCbCr')
@@ -100,10 +110,15 @@ class ChooseColorSpace:
                 y = image[:, :, 0]
                 cb = image[:, :, 1]
                 cr = image[:, :, 2]
-
+                print('ycbcr')
+                print(s)
                 if '420' in s:
                     cb = blockify(cb)
                     cr = blockify(cr)
+
+                self.out = self.out + ('4;' if '420' in s else '2;')
+                print("out", self.out)
+                ChooseDCT(self.root, s, y, cb, cr, self.out)
 
 
 # TODO: change name of a method

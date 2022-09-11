@@ -39,6 +39,8 @@ class InitialScreen:
         self.has_image = False
         self.size_old = 0
         self.size_new = 0
+        self.image_height = 0
+        self.image_width = 0
 
         self.height = 900
         self.width = 1500
@@ -104,7 +106,8 @@ class InitialScreen:
     def partial_compression(self):
         if self.has_image:
             self.canvas.destroy()
-            ChooseColorSpace(self.root, self.filename)
+            out = str(self.image_height) + 'x' + str(self.image_width) + ';'
+            ChooseColorSpace(self.root, self.filename, out)
 
     def search_image(self):
         filename = filedialog.askopenfilename(initialdir="Examples/", title="Select file",
@@ -122,6 +125,8 @@ class InitialScreen:
 
         self.img = Image.open(filename)
         w, h = self.img.size
+        self.image_width = w
+        self.image_height = h
         self.size_old = w * h * 3 * 8
         w, h = calculate_size(self.img_canvas_w, self.img_canvas_h, w, h)
 
