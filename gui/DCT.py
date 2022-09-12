@@ -10,6 +10,7 @@ from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
 from gui.predictive_encoding import PredictiveEncoding
+from gui.quantization import QuantizeImage
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
@@ -26,16 +27,14 @@ class ChooseDCT:
         self.show_image1 = None
         self.root = root
         self.color_space = color_space
-        self.img1 = img1
-        self.img2 = img2
-        self.img3 = img3
+        self.img1 = img1.astype(int)
+        self.img2 = img2.astype(int)
+        self.img3 = img3.astype(int)
         self.out = out
 
         self.height = 900
         self.width = 1500
         self.canvas = tk.Canvas(self.root, height=self.height, width=self.width, bg="#263D42")
-
-        print(self.out)
 
         if color_space == 'RGB' or color_space == 'YCbCr444':
             # image frame
@@ -148,10 +147,8 @@ class ChooseDCT:
         image3 = Image.fromarray(self.img3).convert('L')
 
         w, h = image1.size
-        print(self.img_canvas1_w, self.img_canvas1_h)
-        print(w, h)
         w, h = calculate_size(self.img_canvas1_w, self.img_canvas1_h, w, h)
-        print(w, h)
+
         image1 = image1.resize((w, h), Image.ANTIALIAS)
         self.show_image1 = ImageTk.PhotoImage(image1)
         self.img_canvas1 = tk.Canvas(self.frame1, height=h, width=w, bg="gray", bd=0, highlightthickness=0,
@@ -180,31 +177,31 @@ class ChooseDCT:
     def accept_DCT(self):
 
         if self.clicked1.get() in self.options1:
-            print(self.clicked1.get())
 
             if self.clicked1.get() == "DCT":
                 if self.clicked2.get() in self.options2:
                     block_size = 4 if '4' in self.clicked2.get() else (8 if '8' in self.clicked2.get() else 16)
-                    self.out = self.out + '4;' if '4' in self.clicked2.get() else (
-                        '8;' if '8' in self.clicked2.get() else '6;')
+                    self.out = self.out + ('4;' if '4' in self.clicked2.get() else (
+                        '8;' if '8' in self.clicked2.get() else '6;'))
 
-
-                    print(self.img1[:8, :8])
                     self.img1 -= 128
+
+                    print("---DCT---")
+                    print(self.img1[25 * 8:25 * 8 + 8, :8])
                     dct_image1 = calc_dct(self.img1, block_size)
+                    print(dct_image1[25 * 8:25 * 8 + 8, :8])
                     self.img2 -= 128
                     dct_image2 = calc_dct(self.img3, block_size)
                     self.img3 -= 128
                     dct_image3 = calc_dct(self.img3, block_size)
 
-                    print(self.img1[:8, :8])
-
                     self.canvas.destroy()
-                    PredictiveEncoding(self.root, dct_image1, dct_image2, dct_image3, self.out)
+                    QuantizeImage(self.root, dct_image1, dct_image2, dct_image3, self.out)
 
             else:
                 self.out = self.out + '0;'
-                print(self.out)
+                self.canvas.destroy()
+                QuantizeImage(self.root, self.img1, self.img2, self.img3, self.out)
 
         else:
             print('ERROR')

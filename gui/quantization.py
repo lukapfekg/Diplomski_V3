@@ -9,6 +9,7 @@ import numpy as np
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
+from gui.predictive_encoding import PredictiveEncoding
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
@@ -18,13 +19,14 @@ from jpeg.image_scaling import upscale
 from gui.util_gui import calculate_size
 
 
-class PredictiveEncoding:
+class QuantizeImage:
 
     def __init__(self, root, img1, img2, img3, out):
+        self.quant = None
         self.root = root
-        self.image1 = img1
-        self.image2 = img2
-        self.image3 = img3
+        self.image1 = img1.astype(int)
+        self.image2 = img2.astype(int)
+        self.image3 = img3.astype(int)
         self.out = out
         self.list_out = self.out.split(';')
         self.has_dct = self.list_out[2] != '0'
@@ -33,8 +35,6 @@ class PredictiveEncoding:
         self.img_height, self.img_width = self.list_out[0].split('x')
         self.color_space = 'RBG' if self.list_out[1] == 'R' else ('YCbCr444' if self.list_out[1] == '4' else 'YCbCr420')
         self.dct = 'Has DCT' if self.has_dct else 'Does not have DCT'
-        self.quant = self.list_out[3] != 'N'
-        self.quant_val = 0 if (not self.quant or self.list_out[3] == 'T') else int(self.list_out[3])
 
         # canvas
         self.height = 900
@@ -43,7 +43,7 @@ class PredictiveEncoding:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.55, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.45, relwidth=0.6, relx=0.025, rely=0.25)
 
         # labels
         self.img_height = "Height: " + self.img_height
@@ -73,29 +73,20 @@ class PredictiveEncoding:
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
             self.label5.pack(side=tk.TOP, pady=20)
 
-        self.label6 = tk.Label(self.frame, text='Quantization: ' + str(self.quant), justify=tk.CENTER,
-                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label6.pack(side=tk.TOP, pady=20)
-
-        if self.quant_val is not 0:
-            self.label7 = tk.Label(self.frame, text='Quantization value: ' + str(self.quant_val), justify=tk.CENTER,
-                                   width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-            self.label7.pack(side=tk.TOP, pady=20)
-
         # drop-down frame
         self.button_frame = tk.Frame(self.canvas, bg="#354552")
         self.button_frame.place(relwidth=0.325, relheight=0.3, relx=0.65, rely=0.3)
 
         self.options1 = ["YES", "NO"]
         self.clicked1 = tk.StringVar()
-        self.clicked1.set("Do predictive encoding")
+        self.clicked1.set("Quantize image")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
         self.drop.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
         self.drop.pack(side=tk.TOP, pady=10)
 
         if not self.has_dct:
-            self.options2 = ["Horizontal", "Vertical"]
+            self.options2 = ["2", "4", "8"]
             self.clicked2 = tk.StringVar()
             self.clicked2.set("Choose quantization parameter")
 
@@ -110,73 +101,51 @@ class PredictiveEncoding:
         self.canvas.pack()
 
     def accept_DCT(self):
-        print("-PREDICTIVE-")
         if self.clicked1.get() == 'YES':
             if self.has_dct:
-                # print(self.image1[25*8: 25*8+8, :8])
-                img1 = self.dct_predictive_encoding(self.image1)
-                img2 = self.dct_predictive_encoding(self.image2)
-                img3 = self.dct_predictive_encoding(self.image3)
+                img1 = quantize_images(self.image1, self.block_size).astype(int)
+                img2 = quantize_images(self.image2, self.block_size).astype(int)
+                img3 = quantize_images(self.image3, self.block_size).astype(int)
 
                 self.out += 'T;'
 
+                print(img1[:self.block_size, :self.block_size])
+                print(self.image1[:self.block_size, :self.block_size])
+
+                self.canvas.destroy()
+                PredictiveEncoding(self.root, img1, img2, img3, self.out)
+
             else:
-                if self.clicked2.get() == "Horizontal":
-                    img1 = self.predictive_encoding(self.image1, 'h')
-                    img2 = self.predictive_encoding(self.image2, 'h')
-                    img3 = self.predictive_encoding(self.image3, 'h')
+                if self.clicked2.get() in self.options2:
+                    self.quant = int(self.clicked2.get())
 
-                    self.out += 'V;'
+                    img1 = np.divide(self.image1, self.quant)
+                    img2 = np.divide(self.image2, self.quant)
+                    img3 = np.divide(self.image3, self.quant)
 
-                elif self.clicked2.get() == 'Vertical':
-                    img1 = self.predictive_encoding(self.image1, 'h')
-                    img2 = self.predictive_encoding(self.image2, 'h')
-                    img3 = self.predictive_encoding(self.image3, 'h')
+                    self.out += self.clicked2.get() + ';'
 
-                    self.out += 'V;'
-
-        else:
+                    self.canvas.destroy()
+                    PredictiveEncoding(self.root, img1, img2, img3, self.out)
+        elif self.clicked1.get() == 'NO':
             self.out += 'N;'
-            # next screen self.image1,2,3 is sent
+            self.canvas.destroy()
+            PredictiveEncoding(self.root, self.image1, self.image2, self.image3, self.out)
 
-    def predictive_encoding(self, image, axis):
-        h, w = image.shape
 
-        out_image = np.array(image)
+def quantize_images(image, block_size):
+    out_image = np.zeros((image.shape[0], image.shape[1]))
 
-        prev = 0
-        for i in range(h if axis == 'h' else w):
-            for j in range(w if axis == 'v' else h):
-                if i == 0 and j == 0:
-                    prev = image[i, j]
-                    continue
+    blocks_h = image.shape[0] // block_size
+    blocks_w = image.shape[1] // block_size
 
-                if axis == 'h':
-                    out_image[i, j] = image[i, j] - prev
-                    prev = image[i, j]
-                else:
-                    out_image[j, i] = image[j, i] - prev
-                    prev = image[j, i]
+    quant = QUANTIZATION_MATRIX if block_size == 8 else (
+        QUANTIZATION_MATRIX_16 if block_size == 16 else QUANTIZATION_MATRIX_4)
 
-        return out_image
+    for i in range(blocks_h):
+        for j in range(blocks_w):
+            out_image[i * block_size: i * block_size + block_size, j * block_size:j * block_size + block_size] \
+                = np.divide(
+                image[i * block_size: i * block_size + block_size, j * block_size:j * block_size + block_size], quant)
 
-    def dct_predictive_encoding(self, image):
-        h, w = image.shape
-
-        h = h // self.block_size
-        w = w // self.block_size
-
-        out_img = np.array(image)
-
-        for i in range(h):
-            for j in range(w):
-                if i == 0 and j == 0:
-                    prev = image[i * self.block_size, j * self.block_size]
-                    continue
-
-                out_img[i * self.block_size, j * self.block_size] = image[
-                                                                        i * self.block_size, j * self.block_size] - prev
-
-                prev = image[i * self.block_size, j * self.block_size]
-
-        return out_img
+    return out_image

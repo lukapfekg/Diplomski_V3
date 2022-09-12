@@ -116,7 +116,7 @@ class ChooseColorSpace:
                     cb = blockify(cb)
                     cr = blockify(cr)
 
-                self.out = self.out + ('4;' if '420' in s else '2;')
+                self.out = self.out + ('4;' if '444' in s else '2;')
                 print("out", self.out)
                 ChooseDCT(self.root, s, y, cb, cr, self.out)
 
