@@ -30,7 +30,7 @@ def resize_image(image, block_size=8):
         if h % block_size == 0 and w % block_size == 0:
             return np.array(image)
 
-        return add_padding(image)
+        return add_padding(image, block_size)
 
     else:
         h, w, p = image.shape

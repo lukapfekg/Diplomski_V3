@@ -130,8 +130,10 @@ class RleAndEntropy:
         image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
         print(image.shape)
         image[:, :, 0] = self.image1
-        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)
-        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)
+        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
 
         self.entropy = measure.shannon_entropy(image)
         print("entropy5:", self.entropy)
@@ -202,6 +204,9 @@ class RleAndEntropy:
 def blockify(image, block_size):
     h, w = image.shape
 
+    h += 0 if h % block_size == 0 else block_size - h % block_size
+    w += 0 if w % block_size == 0 else block_size - w % block_size
+
     h = h // block_size
     w = w // block_size
 
@@ -210,6 +215,8 @@ def blockify(image, block_size):
     for i in range(h):
         for j in range(w):
             cur = image[i * block_size:i * block_size + block_size, j * block_size:j * block_size + block_size]
+
+            print(i, j)
 
             zigzag_arr = zigzag_optimized(cur, block_size)
 

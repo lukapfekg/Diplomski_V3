@@ -155,8 +155,10 @@ class QuantizeImage:
             print(self.image2.shape)
             print(bilinear_interpolation(self.image2, 2).shape)
         image[:, :, 0] = self.image1
-        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)
-        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)
+        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
 
         self.entropy = skimage.measure.shannon_entropy(image)
         print("entropy3:", self.entropy)

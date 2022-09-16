@@ -198,8 +198,8 @@ class Decompression:
                 # image += 128
 
                 image1 = self.inverse_dct(inverse_zigzag1)
-                image2 = self.inverse_dct(inverse_zigzag2)
-                image3 = self.inverse_dct(inverse_zigzag3)
+                image2 = self.inverse_dct(inverse_zigzag2, False)
+                image3 = self.inverse_dct(inverse_zigzag3, False)
 
                 if '420' in self.color_space:
                     image2 = bilinear_interpolation(image2, 2)
@@ -214,18 +214,19 @@ class Decompression:
                 image[:, :, 1] = image2.astype(np.uint8)
                 image[:, :, 2] = image3.astype(np.uint8)
 
-
-                original = Image.open("../Examples/miner.jpg")#.convert('YCbCr')
+                original = Image.open("../Examples/miner.jpg").convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
                 original = np.array(original)
 
                 print("----PSNR----")
 
-                psnr_orig =  skimage.metrics.peak_signal_noise_ratio(original, original)
+                psnr_orig = skimage.metrics.peak_signal_noise_ratio(original, original)
                 print(psnr_orig)
                 psnr = skimage.metrics.peak_signal_noise_ratio(original, image)
                 print(psnr)
 
-                image = Image.fromarray(image, mode='RGB')
+                image = Image.fromarray(image, mode='YCbCr') if 'Y' in self.image_color_space else Image.fromarray(
+                    image, mode='RGB')
                 print(image.mode)
                 # image = image.convert('RGB')
 
@@ -350,9 +351,11 @@ class Decompression:
 
         return out_array
 
-    def inverse_dct(self, array):
-        h = int(self.image_height) if '0' not in self.color_space else int(np.ceil(int(self.image_height) / 2))
-        w = int(self.image_width) if '0' not in self.color_space else int(np.ceil(int(self.image_width) / 2))
+    def inverse_dct(self, array, first=True):
+        h = int(self.image_height) if '0' not in self.color_space or first else int(
+            np.ceil(int(self.image_height) / 2))
+        w = int(self.image_width) if '0' not in self.color_space or first else int(
+            np.ceil(int(self.image_width) / 2))
         h += 0 if h % self.block_size == 0 else self.block_size - h % self.block_size
         w += 0 if w % self.block_size == 0 else self.block_size - w % self.block_size
 
@@ -366,7 +369,8 @@ class Decompression:
                 tek[tek < 0] = 0
                 tek[tek > 255] = 255
 
-                out_image[i * 8:i * 8 + 8, j * 8:j * 8 + 8] = tek
+                out_image[i * self.block_size:i * self.block_size + self.block_size,
+                j * self.block_size:j * self.block_size + self.block_size] = tek
 
                 k += 1
 
