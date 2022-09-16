@@ -6,16 +6,13 @@ mes = [1, 2, 3, 4, 0, 0, 0, 5, 5, 6, -1, 2, 6, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
 
 
 def find_eob(array):
-    out_array = [str(i) for i in array]
-
-    for i in range(len(array) - 1, -1, -1):
-        if out_array[i] == '0':
-            out_array = out_array[:-1]
+    for i in range(len(array) - 1, 0, -1):
+        if array[i] == 0:
+            array = array[:-1]
         else:
             break
 
-    out_array = np.append(out_array, 'E')
-    return out_array
+    return np.append(array, 'E')
 
 
 def run_length_encoder(array):
@@ -39,7 +36,7 @@ def run_length_encoder(array):
                     out.append('(' + str(cnt) + ',' + last + ')')
                 cnt = 0
                 last = str(array[i])
-
+    # TODO: Add last rle if no EOL
     # out = "".join(out)
     return out
 
@@ -120,11 +117,10 @@ def find_rle(arr, rle_type=1):
         elif rle_type == 2:
             eob = run_length_encoder_2(eob)
 
-        rle_array.append(eob)
-
-    rle_array = [element for sublist in rle_array for element in sublist]
+        rle_array += eob
 
     return rle_array
+
 
 # eob = find_eob(mes)
 # print(eob)
@@ -138,3 +134,11 @@ def find_rle(arr, rle_type=1):
 # decoded = [int(i) for i in decoded]
 # print(decoded)
 # print(len(decoded))
+
+
+a = ['a', 'b', 'c']
+b = ['d', 'e']
+
+print(a)
+a += b
+print(a)

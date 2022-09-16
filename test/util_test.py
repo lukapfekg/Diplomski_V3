@@ -2,11 +2,11 @@ import skimage.measure
 from skimage.io import imread
 import os
 
-f = open("bitstring.dat", 'r')
+f = open("bitstring.dat", 'w')
 
-a = f.readline()
+f.write('1100101')
 
-print(a)
+f.close()
 
 
 

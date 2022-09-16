@@ -6,6 +6,7 @@ from os import *
 from tkinter import filedialog
 
 import numpy as np
+import skimage.measure
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
@@ -18,17 +19,21 @@ from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
 from gui.util_gui import calculate_size
+from util.bilinear_trasformation import bilinear_interpolation
 
 
 class ChooseColorSpace:
 
     def __init__(self, root, filename, out):
+        self.entropy = None
         self.drag_and_drop_img = None
         self.size_old = None
         self.filename = filename
         self.img = None
         self.root = root
         self.out = out
+
+        self.calc_entropy()
 
         self.height = 900
         self.width = 1500
@@ -60,7 +65,8 @@ class ChooseColorSpace:
         # drop down menu
         self.options = ["RGB", "YCbCr444", "YCbCr420"]
         self.clicked = tk.StringVar()
-        self.clicked.set("Choose color space")
+        self.clicked.set("YCbCr444")
+        # self.clicked.set("Choose color space")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked, *self.options)
         self.drop.config(width=20, font=("Roboto", 16, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -69,6 +75,18 @@ class ChooseColorSpace:
         button_dropdown = tk.Button(self.button_frame, text="JPEG", height=5, width=25, fg="white", bg="#263D42")
         button_dropdown.configure(command=self.accept_color_space)
         button_dropdown.pack(side=tk.BOTTOM, pady=10)
+
+        # entropy frame
+        self.entropy_frame = tk.Frame(self.canvas, bg="#354552")
+        self.entropy_frame.place(relwidth=0.3, relheight=0.175, relx=0.67, rely=0.55)
+
+        # entropy label
+        self.entropy_label = tk.Label(self.entropy_frame, text='Entropy', justify=tk.CENTER,
+                                      width=80, height=1, font=("Roboto", 16, "bold"), bg="#354552", fg="white")
+        self.entropy_label.pack(side=tk.TOP, pady=20)
+        self.entropy_label1 = tk.Label(self.entropy_frame, text=str(self.entropy), justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 16, "bold"), bg="#354552", fg="white")
+        self.entropy_label1.pack(side=tk.TOP, pady=20)
 
         self.display_image()
         self.canvas.pack()
@@ -88,6 +106,7 @@ class ChooseColorSpace:
         self.img_canvas.create_image(0, 0, anchor=tk.NW, image=self.drag_and_drop_img)
         self.img_canvas.pack()
 
+
     def accept_color_space(self):
         s = self.clicked.get()
 
@@ -100,7 +119,7 @@ class ChooseColorSpace:
                 r = image[:, :, 0]
                 g = image[:, :, 1]
                 b = image[:, :, 2]
-                print("rgb")
+                # print("rgb")
                 self.out = self.out + 'R;'
                 ChooseDCT(self.root, s, r, g, b, self.out)
 
@@ -110,15 +129,22 @@ class ChooseColorSpace:
                 y = image[:, :, 0]
                 cb = image[:, :, 1]
                 cr = image[:, :, 2]
-                print('ycbcr')
-                print(s)
+                # print('ycbcr')
+                # print(s)
                 if '420' in s:
                     cb = blockify(cb)
                     cr = blockify(cr)
 
                 self.out = self.out + ('4;' if '444' in s else '2;')
-                print("out", self.out)
+                # print("out", self.out)
                 ChooseDCT(self.root, s, y, cb, cr, self.out)
+
+    def calc_entropy(self):
+        image = Image.open(self.filename)
+        image = np.array(image)
+
+        self.entropy = skimage.measure.shannon_entropy(image)
+        print("entropy1:", self.entropy)
 
 
 # TODO: change name of a method

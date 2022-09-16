@@ -8,8 +8,8 @@ def add_padding(img, block_size=8):
         return img
 
     else:
-        pad_h = h % block_size
-        pad_w = w % block_size
+        pad_h = 0 if h % block_size == 0 else block_size - h % block_size
+        pad_w = 0 if w % block_size == 0 else block_size - w % block_size
 
         img_out = np.zeros((h + pad_h, w + pad_w))
 
