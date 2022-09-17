@@ -128,7 +128,7 @@ class RleAndEntropy:
 
     def calc_entropy(self):
         image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
-        print(image.shape)
+
         image[:, :, 0] = self.image1
         image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
                                                                            :self.image1.shape[0], :self.image1.shape[1]]
@@ -154,6 +154,7 @@ class RleAndEntropy:
                     rle1 += rle_modular(zigzag_arr_2)
                     rle1 += rle_modular(zigzag_arr_3)
 
+                    # TODO: make it faster
                     huff_dict, coded_arr = find_huffman_dict_and_array(rle1)
 
                     self.out += 'R;'
@@ -164,9 +165,9 @@ class RleAndEntropy:
                     Decompression(self.root, img_bin, self.out)
 
                 else:
-                    arr1 = flatten_image(self.image1, self.vertical)
-                    arr2 = flatten_image(self.image2, self.vertical)
-                    arr3 = flatten_image(self.image3, self.vertical)
+                    arr1 = flatten_image(self.image1, not self.vertical)
+                    arr2 = flatten_image(self.image2, not self.vertical)
+                    arr3 = flatten_image(self.image3, not self.vertical)
 
                     rle1 = rle_modular(arr1, False)
                     rle1 += rle_modular(arr2, False)
@@ -183,13 +184,8 @@ class RleAndEntropy:
 
             elif entropy:
                 entropy_array = flatten_image(self.image1, self.vertical)
-                print(len(entropy_array))
                 entropy_array += flatten_image(self.image2, self.vertical)
-                print(len(entropy_array))
                 entropy_array += flatten_image(self.image3, self.vertical)
-                print(len(entropy_array))
-
-                print(len(entropy_array))
 
                 huff_dict, coded_arr = find_huffman_dict_and_array(entropy_array)
 
@@ -215,8 +211,6 @@ def blockify(image, block_size):
     for i in range(h):
         for j in range(w):
             cur = image[i * block_size:i * block_size + block_size, j * block_size:j * block_size + block_size]
-
-            print(i, j)
 
             zigzag_arr = zigzag_optimized(cur, block_size)
 
@@ -250,39 +244,6 @@ def find_huffman_dict_and_array(rle_array):
     compressed_dict = compress_dict_modular(str(huff_dict))
 
     return compressed_dict, huff_code
-
-
-# TODO: remove this after all is done (save just in case of some failure)
-# def correct_huff_dict(freq: dict, huff: dict):
-#     fr = list(freq)
-#     hu = list(huff)
-#
-#     if len(freq) == len(huff):
-#         return huff
-#
-#     freq_key_list = list(freq.keys())
-#     freq_val_list = list(freq.values())
-#     huff_key_list = list(huff.keys())
-#     huff_val_list = list(huff.values())
-#
-#     diff = list(set(freq_key_list) - set(huff_key_list))
-#
-#     for dif in diff:
-#         pos = freq_key_list.index(dif)
-#
-#         huff_key_list.insert(pos, dif)
-#
-#         temp = huff_val_list[-1]
-#
-#         huff_val_list = huff_val_list[:-1]
-#
-#         huff_val_list.append(temp + '0')
-#         huff_val_list.append(temp + '1')
-#
-#     hu = {key: val for key, val in zip(huff_key_list, huff_val_list)}
-#
-#     return hu
-
 
 def tuple_to_bin(t):
     bits, val = t

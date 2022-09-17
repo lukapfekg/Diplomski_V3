@@ -233,10 +233,7 @@ class ChooseDCT:
 
                     self.img1 -= 128
 
-                    # print("---DCT---")
-                    # print(self.img1[25 * 8:25 * 8 + 8, :8])
                     dct_image1 = calc_dct(self.img1, block_size)
-                    # print(dct_image1[25 * 8:25 * 8 + 8, :8])
                     self.img2 -= 128
                     dct_image2 = calc_dct(self.img2, block_size)
                     self.img3 -= 128
@@ -255,10 +252,9 @@ class ChooseDCT:
 
     def calc_entropy(self):
         image = np.zeros((self.img1.shape[0], self.img1.shape[1], 3))
-        print(image.shape)
         image[:, :, 0] = self.img1
         image[:, :, 1] = self.img2 if '420' not in self.color_space else bilinear_interpolation(self.img2, 2)
         image[:, :, 2] = self.img3 if '420' not in self.color_space else bilinear_interpolation(self.img3, 2)
 
         self.entropy = measure.shannon_entropy(image)
-        print("entropy2:", self.entropy)
+        # print("entropy2:", self.entropy)

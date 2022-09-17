@@ -122,10 +122,8 @@ class PredictiveEncoding:
         self.canvas.pack()
 
     def accept_DCT(self):
-        print("-PREDICTIVE-")
         if self.clicked1.get() == 'YES':
             if self.has_dct:
-                # print(self.image1[25*8: 25*8+8, :8])
                 img1 = self.dct_predictive_encoding(self.image1)
                 img2 = self.dct_predictive_encoding(self.image2)
                 img3 = self.dct_predictive_encoding(self.image3)
@@ -162,27 +160,42 @@ class PredictiveEncoding:
     def predictive_encoding(self, image, axis):
         h, w = image.shape
 
-        out_image = np.array(image)
+        image = np.reshape(image, h * w, order='F' if axis == 'v' else 'C')
+        image[1:] = np.subtract(image[1:], image[:-1])
 
-        prev = 0
+        image = np.reshape(image, (h, w), order='F' if axis == 'v' else 'C')
 
-        h_info = h if axis == 'h' else w
-        w_info = w if axis == 'v' else h
+        # out_image = np.array(image)
+        #
+        # prev = 0
+        #
+        # h_info = h if axis == 'h' else w
+        # w_info = w if axis == 'v' else h
+        #
+        # for i in range(h if axis == 'h' else w):
+        #     for j in range(w if axis == 'h' else h):
+        #         if i == 0 and j == 0:
+        #             prev = image[i, j]
+        #             continue
+        #
+        #         if axis == 'h':
+        #             out_image[i, j] = image[i, j] - prev
+        #             prev = image[i, j]
+        #         else:
+        #             out_image[j, i] = image[j, i] - prev
+        #             prev = image[j, i]
+        #
+        # # image = np.reshape(image, h * w, order='F' if axis == 'v' else 'C')
+        # #
+        # #
+        # #
+        # # image[1:] = np.add(image[:-1], image[1:])
+        # #
+        # # image = np.reshape(image, (h, w), order='F' if axis == 'v' else 'C')
+        #
+        # print(out_image == image_r2)
 
-        for i in range(h if axis == 'h' else w):
-            for j in range(w if axis == 'h' else h):
-                if i == 0 and j == 0:
-                    prev = image[i, j]
-                    continue
-
-                if axis == 'h':
-                    out_image[i, j] = image[i, j] - prev
-                    prev = image[i, j]
-                else:
-                    out_image[j, i] = image[j, i] - prev
-                    prev = image[j, i]
-
-        return out_image
+        return image
 
     def dct_predictive_encoding(self, image):
         h, w = image.shape
@@ -207,7 +220,6 @@ class PredictiveEncoding:
 
     def calc_entropy(self):
         image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
-        print(image.shape)
         image[:, :, 0] = self.image1
         image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
                                                                            :self.image1.shape[0], :self.image1.shape[1]]

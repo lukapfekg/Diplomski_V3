@@ -121,9 +121,6 @@ class QuantizeImage:
 
                 self.out += 'T;'
 
-                print(img1[:self.block_size, :self.block_size])
-                print(self.image1[:self.block_size, :self.block_size])
-
                 self.canvas.destroy()
                 PredictiveEncoding(self.root, img1, img2, img3, self.out)
 
@@ -131,10 +128,7 @@ class QuantizeImage:
                 if self.clicked2.get() in self.options2:
                     self.quant = int(self.clicked2.get())
 
-                    print("---QUANT---")
-                    print(self.image1[0, :20])
                     img1 = np.divide(self.image1, self.quant).astype(int)
-                    print(img1[0, :20])
                     img2 = np.divide(self.image2, self.quant).astype(int)
                     img3 = np.divide(self.image3, self.quant).astype(int)
 
@@ -149,11 +143,7 @@ class QuantizeImage:
 
     def calc_entropy(self):
         image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
-        print(image.shape)
 
-        if '420' in self.color_space:
-            print(self.image2.shape)
-            print(bilinear_interpolation(self.image2, 2).shape)
         image[:, :, 0] = self.image1
         image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
                                                                            :self.image1.shape[0], :self.image1.shape[1]]

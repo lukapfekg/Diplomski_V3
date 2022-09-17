@@ -39,7 +39,6 @@ class ChooseColorSpace:
         self.width = 1500
         self.canvas = tk.Canvas(self.root, height=self.height, width=self.width, bg="#263D42")
 
-        # print("filename: ", self.filename)
 
         # image frame
         self.frame = tk.Frame(self.canvas, bg="#263D42")
@@ -119,7 +118,6 @@ class ChooseColorSpace:
                 r = image[:, :, 0]
                 g = image[:, :, 1]
                 b = image[:, :, 2]
-                # print("rgb")
                 self.out = self.out + 'R;'
                 ChooseDCT(self.root, s, r, g, b, self.out)
 
@@ -129,14 +127,11 @@ class ChooseColorSpace:
                 y = image[:, :, 0]
                 cb = image[:, :, 1]
                 cr = image[:, :, 2]
-                # print('ycbcr')
-                # print(s)
                 if '420' in s:
                     cb = blockify(cb)
                     cr = blockify(cr)
 
                 self.out = self.out + ('4;' if '444' in s else '2;')
-                # print("out", self.out)
                 ChooseDCT(self.root, s, y, cb, cr, self.out)
 
     def calc_entropy(self):

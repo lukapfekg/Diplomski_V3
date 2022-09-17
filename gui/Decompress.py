@@ -11,6 +11,7 @@ import numpy
 import numpy as np
 import skimage.metrics
 from PIL import ImageTk, Image
+from bitarray import bitarray
 from dahuffman import HuffmanCodec
 from tkinterdnd2 import DND_FILES
 
@@ -149,17 +150,9 @@ class Decompression:
     def decompress(self):
 
         if 'RLE' in self.encoding:
-            # Has DC values
-            # Has EOL
-            # Counts zeros in between
-
-            # get rle arrays from bin array
-            zigzag = self.from_bit_array_to_zigzag(self.image)
-
-            zigzag1, zigzag2, zigzag3 = self.get_images(zigzag)
-
             if self.has_dct:
-
+                zigzag = self.from_bit_array_to_zigzag(self.image)
+                zigzag1, zigzag2, zigzag3 = self.get_images(zigzag)
                 # recreate dct image
                 # inverse zig-zag
 
@@ -170,21 +163,21 @@ class Decompression:
                 if self.predictive:
                     # inverse predictive
                     curr = 0
-                    for i in range(inverse_zigzag1):
+                    for i in range(len(inverse_zigzag1)):
                         if i != 0:
-                            inverse_zigzag1[i][0, 0] = curr - inverse_zigzag1[i][0, 0]
+                            inverse_zigzag1[i][0, 0] = curr + inverse_zigzag1[i][0, 0]
 
                         curr = inverse_zigzag1[i][0, 0]
 
-                    for i in range(inverse_zigzag2):
+                    for i in range(len(inverse_zigzag2)):
                         if i != 0:
-                            inverse_zigzag2[i][0, 0] = curr - inverse_zigzag2[i][0, 0]
+                            inverse_zigzag2[i][0, 0] = curr + inverse_zigzag2[i][0, 0]
 
                         curr = inverse_zigzag2[i][0, 0]
 
-                    for i in range(inverse_zigzag3):
+                    for i in range(len(inverse_zigzag3)):
                         if i != 0:
-                            inverse_zigzag3[i][0, 0] = curr - inverse_zigzag3[i][0, 0]
+                            inverse_zigzag3[i][0, 0] = curr + inverse_zigzag3[i][0, 0]
 
                         curr = inverse_zigzag3[i][0, 0]
 
@@ -193,9 +186,6 @@ class Decompression:
                     inverse_zigzag1 = self.inverse_quantization(inverse_zigzag1)
                     inverse_zigzag2 = self.inverse_quantization(inverse_zigzag2)
                     inverse_zigzag3 = self.inverse_quantization(inverse_zigzag3)
-
-                # inverse dct
-                # image += 128
 
                 image1 = self.inverse_dct(inverse_zigzag1)
                 image2 = self.inverse_dct(inverse_zigzag2, False)
@@ -232,29 +222,57 @@ class Decompression:
 
                 image.save("decompressed.jpg")
 
-                # resize to original size (e.g. 1200x796 image=image[:12000, :796])
-
-                aa = 7
             else:
-                # Counts occurrences of a pixel
-                # get array of pixels
+                start = time.time()
+                rle = self.get_rle_no_dct()
+                end = time.time()
+                print(end-start)
 
-                if self.vertical:
-                    # create vertical image
-                    aa = 5
-                else:
-                    # create horizontal image
-                    aa = 5
+                start = time.time()
+                image1, image2, image3 = self.get_images_no_dct(rle)
+                end = time.time()
+                print(end-start)
 
                 if self.predictive:
-                    # inverse predictive
-                    aa = 4
+                    image1 = self.inverse_predictive(image1)
+                    image2 = self.inverse_predictive(image2)
+                    image3 = self.inverse_predictive(image3)
 
                 if self.quant:
-                    # inverse quantization
-                    aa = 4
+                    image1 = np.multiply(image1, self.quant_val)
+                    image2 = np.multiply(image2, self.quant_val)
+                    image3 = np.multiply(image3, self.quant_val)
 
-                aa = 8
+                if '420' in self.color_space:
+                    image2 = bilinear_interpolation(image2, 2)
+                    image3 = bilinear_interpolation(image3, 2)
+
+                image1 = image1[:int(self.image_height), :int(self.image_width)]
+                image2 = image2[:int(self.image_height), :int(self.image_width)]
+                image3 = image3[:int(self.image_height), :int(self.image_width)]
+
+                image = np.zeros((int(self.image_height), int(self.image_width), 3)).astype(np.uint8)
+                image[:, :, 0] = image1.astype(np.uint8)
+                image[:, :, 1] = image2.astype(np.uint8)
+                image[:, :, 2] = image3.astype(np.uint8)
+
+                original = Image.open("../Examples/miner.jpg").convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = np.array(original)
+
+                print("----PSNR----")
+
+                psnr_orig = skimage.metrics.peak_signal_noise_ratio(original, original)
+                print(psnr_orig)
+                psnr = skimage.metrics.peak_signal_noise_ratio(original, image)
+                print(psnr)
+
+                image = Image.fromarray(image, mode='YCbCr') if 'Y' in self.image_color_space else Image.fromarray(
+                    image, mode='RGB')
+                print(image.mode)
+                # image = image.convert('RGB')
+
+                image.save("decompressed_no_dct.jpg")
 
             aa = 5
 
@@ -277,42 +295,34 @@ class Decompression:
         self.decompressed = None
 
     def from_bit_array_to_zigzag(self, bit_array):
-        keys = list(self.dictionary.keys())
-        values = list(self.dictionary.values())
+        dec = bitarray(self.image).decode(self.dictionary)
 
-        curr = ''
         out = []
         out_array = []
-        for i in range(len(self.image)):
-            curr += self.image[i]
+        for elem in dec:
 
-            if curr in values:
-                temp = keys[values.index(curr)]
+            if ',' in elem:
+                elem = elem[1:-1]
+                l, r = elem.split(',')
 
-                if ',' in temp:
-                    temp = temp[1:-1]
-                    l = temp.split(',')[0]
-                    r = temp.split(',')[1]
+                out_temp = ['0'] * int(l)
+                out_temp.append(r)
 
-                    out_temp = ['0' for _ in range(int(l))] if int(l) > 0 else []
-                    out_temp.append(r)
+                out += out_temp
 
-                    out += out_temp
-
-                    if len(out) == self.block_size ** 2:
-                        out_array.append(out)
-                        out = []
-
-                elif temp == 'E':
-                    temp = ['0' for _ in range(self.block_size ** 2 - len(out))]
-                    out += temp
+                if len(out) == self.block_size ** 2:
                     out_array.append(out)
                     out = []
 
-                else:
-                    out.append(temp)
+            elif elem == 'E':
+                elem = ['0'] * (self.block_size ** 2 - len(out))
 
-                curr = ''
+                out += elem
+                out_array.append(out)
+                out = []
+
+            else:
+                out.append(elem)
 
         return out_array
 
@@ -376,6 +386,64 @@ class Decompression:
 
         return out_image
 
+    def get_rle_no_dct(self):
+        dec = bitarray(self.image).decode(self.dictionary)
+
+        out_array = []
+
+        for elem in dec:
+            temp = elem[1:-1]
+            l, r = temp.split(',')
+
+            out_temp = [int(r)] * int(l)
+            out_array += out_temp
+
+        print('out_array_len optimized: ', len(out_array))
+
+        return out_array
+
+    def get_images_no_dct(self, image_array):
+        h = int(self.image_height)
+        w = int(self.image_width)
+
+        image_array = np.array(image_array)
+
+        image1 = image_array[:h * w]
+        image_array = image_array[h * w:]
+        image1 = np.reshape(image1, (h, w), order='F' if self.vertical else 'C')
+
+        if '420' in self.color_space:
+            h = int(h / 2)
+            w = int(w / 2)
+
+        image2 = image_array[:h * w]
+        image_array = image_array[h * w:]
+        image3 = image_array[:h * w]
+        image_array = image_array[h * w:]
+
+        image2 = np.reshape(image2, (h, w), order='F' if self.vertical else 'C')
+        image3 = np.reshape(image3, (h, w), order='F' if self.vertical else 'C')
+
+        return image1, image2, image3
+
+    def inverse_predictive(self, image):
+        h, w = image.shape
+        curr = 0
+
+        image = list(np.reshape(image, h * w, order='F' if self.vertical else 'C'))
+
+        for i in range(len(image)):
+            if i == 0:
+                curr = image[0]
+                continue
+
+            image[i] = curr + image[i]
+            curr = image[i]
+
+        image = np.reshape(image, (h, w), order='F' if self.vertical else 'C')
+
+        return image
+
 
 def get_compression_parameters(bit_array):
     curr = ''
@@ -392,7 +460,6 @@ def get_compression_parameters(bit_array):
         out_array += temp
         curr = temp
 
-    print(out_array)
     return out_array, bit_array
 
 
@@ -400,23 +467,21 @@ def get_dictionary(bit_array):
     curr = ''
     out_array = ''
 
-    print(len(bit_array))
+    ba = bitarray(bit_array)
+    pos = ba.tobytes().find('}'.encode('utf-8'))
 
-    while curr != '}':
-        temp = chr(int(str(bit_array[:8]), 2))
-        bit_array = bit_array[8:]
-
-        out_array += temp
-        curr = temp
-
-    print(len(bit_array))
+    arr = bit_array[:(pos + 1) * 8]
+    bit_array = bit_array[(pos + 1) * 8:]
+    ba = bitarray(arr)
+    bit_list = ba.tolist()
+    out_array = bitarray(bit_list).tobytes().decode('utf-8')
 
     dictionary = decompress_dict_modular(out_array)
 
     dictionary_keys = dictionary.keys()
     dictionary_vals = render_values(dictionary.values())
 
-    dictionary = {key: val for key, val in zip(dictionary_keys, dictionary_vals)}
+    dictionary = {key: bitarray(val) for key, val in zip(dictionary_keys, dictionary_vals)}
 
     return dictionary, bit_array
 
