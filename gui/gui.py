@@ -1,33 +1,25 @@
 import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
 from os import *
 from tkinter import filedialog
 
-from PIL import ImageTk, Image
+import matplotlib
 from tkinterdnd2 import DND_FILES
 
 from gui.chooseColorSpace import ChooseColorSpace
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
+from gui.util_gui import calculate_size, get_histogram, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
-##################################################
-import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg
+)
 
 matplotlib.use('TkAgg')
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg,
-    NavigationToolbar2Tk
-)
-
-
-###################################################
 
 class InitialScreen:
 

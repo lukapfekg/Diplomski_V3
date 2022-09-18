@@ -1,25 +1,12 @@
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
 
-import numpy as np
 import skimage.measure
-from PIL import ImageTk, Image
-from tkinterdnd2 import DND_FILES
 
 # from gui.chooseColorSpace import ChooseColorSpace
 from gui.DCT import ChooseDCT
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
+from gui.util_gui import calculate_size
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
-
-from gui.util_gui import calculate_size
-from util.bilinear_trasformation import bilinear_interpolation
 
 
 class ChooseColorSpace:
@@ -38,7 +25,6 @@ class ChooseColorSpace:
         self.height = 900
         self.width = 1500
         self.canvas = tk.Canvas(self.root, height=self.height, width=self.width, bg="#263D42")
-
 
         # image frame
         self.frame = tk.Frame(self.canvas, bg="#263D42")
@@ -84,7 +70,7 @@ class ChooseColorSpace:
                                       width=80, height=1, font=("Roboto", 16, "bold"), bg="#354552", fg="white")
         self.entropy_label.pack(side=tk.TOP, pady=20)
         self.entropy_label1 = tk.Label(self.entropy_frame, text=str(self.entropy), justify=tk.CENTER,
-                               width=80, height=1, font=("Roboto", 16, "bold"), bg="#354552", fg="white")
+                                       width=80, height=1, font=("Roboto", 16, "bold"), bg="#354552", fg="white")
         self.entropy_label1.pack(side=tk.TOP, pady=20)
 
         self.display_image()
@@ -104,7 +90,6 @@ class ChooseColorSpace:
                                     relief='ridge')
         self.img_canvas.create_image(0, 0, anchor=tk.NW, image=self.drag_and_drop_img)
         self.img_canvas.pack()
-
 
     def accept_color_space(self):
         s = self.clicked.get()

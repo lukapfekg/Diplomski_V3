@@ -1,25 +1,11 @@
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
-
-import numpy as np
-from PIL import ImageTk, Image
-from tkinterdnd2 import DND_FILES
-
-from gui.predictive_encoding import PredictiveEncoding
-from gui.quantization import QuantizeImage
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
-from jpeg.decompression import *
-from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
 
 from skimage import measure
 
+from gui.quantization import QuantizeImage
 from gui.util_gui import calculate_size
+from jpeg.decompression import *
+from jpeg.dictionary_util import *
 from util.bilinear_trasformation import bilinear_interpolation
 
 
@@ -42,7 +28,6 @@ class ChooseDCT:
         self.height = 900
         self.width = 1500
         self.canvas = tk.Canvas(self.root, height=self.height, width=self.width, bg="#263D42")
-
 
         if color_space == 'RGB' or color_space == 'YCbCr444':
             # image frame
@@ -184,7 +169,6 @@ class ChooseDCT:
 
         self.canvas.pack()
 
-
     def show_images(self):
         self.img_canvas1.destroy()
         self.img_canvas2.destroy()
@@ -254,8 +238,8 @@ class ChooseDCT:
     def calc_entropy(self):
         image = np.zeros((self.img1.shape[0], self.img1.shape[1], 3))
         image[:, :, 0] = self.img1
-        image[:, :, 1] = self.img2 if '420' not in self.color_space else bilinear_interpolation(self.img2, 2)
-        image[:, :, 2] = self.img3 if '420' not in self.color_space else bilinear_interpolation(self.img3, 2)
+        image[:, :, 1] = self.img2 if '420' not in self.color_space else bilinear_interpolation(self.img2, 2)[:-1, :-1]
+        image[:, :, 2] = self.img3 if '420' not in self.color_space else bilinear_interpolation(self.img3, 2)[:-1, :-1]
 
         self.entropy = measure.shannon_entropy(image)
         # print("entropy2:", self.entropy)

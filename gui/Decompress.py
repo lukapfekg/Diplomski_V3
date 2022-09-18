@@ -1,32 +1,12 @@
 import builtins
-import time
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
 
-import numpy
-import numpy as np
 import skimage.metrics
-from PIL import ImageTk, Image
 from bitarray import bitarray
-from dahuffman import HuffmanCodec
-from tkinterdnd2 import DND_FILES
 
-# from encoding.huffman_class import make_tree, huffman_code_tree, create_huff_dict
-from encoding.rle_modular import rle_modular
 from gui.ResultWindow import ResultWindow
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
-
-from skimage import measure
-
-from gui.util_gui import calculate_size
 from util.bilinear_trasformation import bilinear_interpolation
 from util.dictionary_util_modular import decompress_dict_modular
 
@@ -117,9 +97,9 @@ class Decompression:
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
         self.label8.pack(side=tk.TOP, pady=15)
 
-        compression_rate = int(self.image_height)*int(self.image_width)*3*8 / self.compressed_size
+        compression_rate = int(self.image_height) * int(self.image_width) * 3 * 8 / self.compressed_size
         self.label10 = tk.Label(self.frame, text='Compression rate: ' + str(compression_rate), justify=tk.CENTER,
-                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
         self.label10.pack(side=tk.TOP, pady=15)
 
         # drop-down frame
@@ -218,8 +198,8 @@ class Decompression:
                 image[:, :, 2] = image3.astype(np.uint8)
                 out_image = image.copy()
 
-                original = Image.open("../Examples/miner.jpg").convert(
-                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = Image.open(self.filename).convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open(self.filename)
                 original = np.array(original)
 
                 print("----PSNR----")
@@ -276,8 +256,8 @@ class Decompression:
 
                 out_image = image.copy()
 
-                original = Image.open("../Examples/miner.jpg").convert(
-                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = Image.open(self.filename).convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open(self.filename)
                 original = np.array(original)
 
                 print("----PSNR----")
@@ -331,8 +311,8 @@ class Decompression:
 
                 out_image = image.copy()
 
-                original = Image.open("../Examples/miner.jpg").convert(
-                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = Image.open(self.filename).convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open(self.filename)
                 original = np.array(original)
 
                 print("----PSNR----")
@@ -381,8 +361,8 @@ class Decompression:
 
                 out_image = image.copy()
 
-                original = Image.open("../Examples/miner.jpg").convert(
-                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = Image.open(self.filename).convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open(self.filename)
                 original = np.array(original)
 
                 print("----PSNR----")

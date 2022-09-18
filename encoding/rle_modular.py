@@ -22,21 +22,19 @@ def rle_encoder_modular_z(array):
     out = []
     cnt = 0
 
-    for i in range(len(array)):
+    for i, elem in enumerate(array):
         if i == 0:
-            out.append(array[i])
+            out.append(elem)
 
-        elif array[i] == 'E':
-            out.append(array[i])
+        elif elem == 'E':
+            out.append(elem)
             return out
 
-        elif array[i] == '0':
+        elif elem == '0':
             cnt += 1
-            if cnt > 5:
-                y = 0
 
         else:
-            out.append('(' + str(cnt) + ',' + array[i] + ')')
+            out.append('(' + str(cnt) + ',' + elem + ')')
             cnt = 0
 
     return out
@@ -94,14 +92,10 @@ def rle_modular(array, dct=True):
         for elem in array:
             eob = find_eob(elem)
             rle = rle_encoder_modular_z(eob)
-            out.append(rle)
-
-        out = [element for sublist in out for element in sublist]
+            out += rle
 
     else:
-        rle = rle_encoder_modular(array)
-
-        out = rle
+        out = rle_encoder_modular(array)
 
     return out
 

@@ -1,29 +1,12 @@
-import time
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
 
-import numpy
-import numpy as np
-from PIL import ImageTk, Image
 from dahuffman import HuffmanCodec
-from tkinterdnd2 import DND_FILES
-
-# from encoding.huffman_class import make_tree, huffman_code_tree, create_huff_dict
-from encoding.rle_modular import rle_modular
-from gui.Decompress import Decompression
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
-from jpeg.decompression import *
-from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
-
 from skimage import measure
 
-from gui.util_gui import calculate_size
+from encoding.rle_modular import rle_modular
+from gui.Decompress import Decompression
+from jpeg.decompression import *
+from jpeg.dictionary_util import *
 from util.bilinear_trasformation import bilinear_interpolation
 from util.dictionary_util_modular import compress_dict_modular
 
@@ -241,9 +224,15 @@ def find_huffman_dict_and_array(rle_array):
     codec = HuffmanCodec.from_frequencies(freq_dict)
     huff_dict = HuffmanCodec.get_code_table(codec)
 
+    huff_vals = list(huff_dict.values())
+    huff_keys = list(huff_dict.keys())
+    dict_vals_binary = parse_touple_values(huff_vals)
+
+    new_dict = {k: v for k, v in zip(huff_keys, dict_vals_binary)}
+
     huff_code = ''
     for elem in rle_array:
-        huff_code += tuple_to_bin(huff_dict[elem])
+        huff_code += new_dict[elem]  # tuple_to_bin(huff_dict[elem])
 
     compressed_dict = compress_dict_modular(str(huff_dict))
 
@@ -253,7 +242,7 @@ def find_huffman_dict_and_array(rle_array):
 def tuple_to_bin(t):
     bits, val = t
 
-    s = ['0' for _ in range(bits)]
+    s = ['0'] * bits
     s = "".join(s)
     val = bin(val)
     val = val.split('b')[1]
@@ -261,3 +250,21 @@ def tuple_to_bin(t):
     s = s[:-len(val)] + val
 
     return s
+
+
+def parse_touple_values(dict_values):
+    out = []
+
+    for elem in dict_values:
+        bits, val = elem
+
+        s = ['0'] * bits
+        s = "".join(s)
+
+        val = bin(val).split('b')[1]
+
+        s = s[:-len(val)] + val
+
+        out.append(s)
+
+    return out
