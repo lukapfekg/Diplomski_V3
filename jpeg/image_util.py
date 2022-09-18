@@ -1,15 +1,15 @@
 from pylab import *
 
 
-def add_padding(img):
+def add_padding(img, block_size=8):
     h, w = img.shape
 
-    if h % 8 == 0 and w % 8 == 0:
+    if h % block_size == 0 and w % block_size == 0:
         return img
 
     else:
-        pad_h = h % 8
-        pad_w = w % 8
+        pad_h = 0 if h % block_size == 0 else block_size - h % block_size
+        pad_w = 0 if w % block_size == 0 else block_size - w % block_size
 
         img_out = np.zeros((h + pad_h, w + pad_w))
 
@@ -24,22 +24,32 @@ def add_padding(img):
         return img_out
 
 
-def resize_image(image):
+def resize_image(image, block_size=8):
     if len(shape(image)) == 2:
         h, w = image.shape
-        if h % 8 == 0 and w % 8 == 0:
+        if h % block_size == 0 and w % block_size == 0:
             return np.array(image)
 
-        return add_padding(image)
+        return add_padding(image, block_size)
+
     else:
         h, w, p = image.shape
 
-        if h % 8 == 0 and w % 8 == 0:
+        if h % block_size == 0 and w % block_size == 0:
             return image
 
-        out_image = np.zeros((h + h % 8, w + w % 8, p))
+        pad_h = 0 if h % block_size == 0 else block_size - h % block_size
+        pad_w = 0 if w % block_size == 0 else block_size - w % block_size
+
+        out_image = np.zeros((h + pad_h, w + pad_w, p))
 
         for i in range(p):
             out_image[:, :, i] = add_padding(image[:, :, i])
 
         return out_image
+
+#
+# image = imread("../Examples/miner.jpg")
+# print(image.shape)
+# img = resize_image(image, block_size=4)
+# print(img.shape)

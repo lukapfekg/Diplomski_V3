@@ -1,32 +1,25 @@
 import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
 from os import *
 from tkinter import filedialog
 
-from PIL import ImageTk, Image
+import matplotlib
 from tkinterdnd2 import DND_FILES
 
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
+from gui.chooseColorSpace import ChooseColorSpace
+from gui.util_gui import calculate_size, get_histogram, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
-##################################################
-import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg
+)
 
 matplotlib.use('TkAgg')
 
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (
-    FigureCanvasTkAgg,
-    NavigationToolbar2Tk
-)
-
-
-###################################################
 
 class InitialScreen:
 
@@ -38,6 +31,8 @@ class InitialScreen:
         self.has_image = False
         self.size_old = 0
         self.size_new = 0
+        self.image_height = 0
+        self.image_width = 0
 
         self.height = 900
         self.width = 1500
@@ -64,13 +59,18 @@ class InitialScreen:
         self.img_canvas.pack()
 
         # button frame
-        self.button_frame = tk.Frame(self.canvas, bg="#354552")
-        self.button_frame.place(relwidth=0.125, relheight=0.5, relx=0.86, rely=0.25)
+        self.button_frame = tk.Frame(self.canvas, bg="#263D42")
+        self.button_frame.place(relwidth=0.125, relheight=0.3, relx=0.86, rely=0.3)
 
         # next canvas button
-        button_next = tk.Button(self.button_frame, text="Change window", height=5, width=15, fg="white", bg="#263D42")
-        button_next.configure(command=self.change_canvas)
-        button_next.pack(side=tkinter.TOP, pady=10)
+        button_JPEG = tk.Button(self.button_frame, text="JPEG", height=5, width=15, fg="white", bg="#263D42")
+        button_JPEG.configure(command=self.change_canvas)
+        button_JPEG.pack(side=tkinter.TOP, pady=10)
+
+        button_next = tk.Button(self.button_frame, text="Partial compression", height=5, width=15, fg="white",
+                                bg="#263D42")
+        button_next.configure(command=self.partial_compression)
+        button_next.pack(side=tkinter.BOTTOM, pady=10)
 
         # text frame
         self.text_frame = tk.Frame(self.canvas, bg="#263D42")
@@ -95,6 +95,12 @@ class InitialScreen:
             self.canvas.destroy()
             SecondScreen(self.root, self.filename, self.size_old, self.size_new)
 
+    def partial_compression(self):
+        if self.has_image:
+            self.canvas.destroy()
+            out = str(self.image_height) + 'x' + str(self.image_width) + ';'
+            ChooseColorSpace(self.root, self.filename, out)
+
     def search_image(self):
         filename = filedialog.askopenfilename(initialdir="Examples/", title="Select file",
                                               filetypes=(("images", "*.jpg"), ("images", "*.png")))
@@ -111,6 +117,8 @@ class InitialScreen:
 
         self.img = Image.open(filename)
         w, h = self.img.size
+        self.image_width = w
+        self.image_height = h
         self.size_old = w * h * 3 * 8
         w, h = calculate_size(self.img_canvas_w, self.img_canvas_h, w, h)
 
