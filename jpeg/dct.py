@@ -59,7 +59,7 @@ def dct_image(image, lossless=False):
 
 
 def calc_dct(image, block_size=8):
-    image = resize_image(image, block_size).astype(np.uint8)
+    image = resize_image(image, block_size).astype(int)
 
     sqr_h = image.shape[0] // block_size
     sqr_w = image.shape[1] // block_size
@@ -76,35 +76,35 @@ def calc_dct(image, block_size=8):
     return out_image.astype(int)
 
 
-image = Image.open("../Examples/miner.jpg").convert('YCbCr')
-image = np.array(image)
-image = image[:, :, 0].astype(int)
-image -= 128
-
-print(image[:8, :8])
-
-curr = image[:8, :8]
-dct_sp = fftpack.dct(fftpack.dct(curr.T, norm='ortho').T, norm='ortho').astype(int)
-print(dct_sp)
-dct_sp = np.divide(dct_sp, QUANTIZATION_MATRIX).astype(int)
-print(dct_sp)
-
-print('-------------------')
-print(image[25 * 8:25 * 8 + 8, :8])
-curr = image[25 * 8:25 * 8 + 8, :8]
-dct_sp = fftpack.dct(fftpack.dct(curr.T, norm='ortho').T, norm='ortho').astype(int)
-print(dct_sp)
-dct_sp = np.divide(dct_sp, QUANTIZATION_MATRIX).astype(int)
-print(dct_sp)
-
-dct_img = dct_image(image)
-
-print('-------------------')
-print(dct_img[0])
-print()
-print()
-print()
-print()
-
-calc_dct_img = calc_dct(image)
-print(calc_dct_img[:8, :8])
+# image = Image.open("../Examples/miner.jpg").convert('YCbCr')
+# image = np.array(image)
+# image = image[:, :, 0].astype(int)
+# image -= 128
+#
+# print(image[:8, :8])
+#
+# curr = image[:8, :8]
+# dct_sp = fftpack.dct(fftpack.dct(curr.T, norm='ortho').T, norm='ortho').astype(int)
+# print(dct_sp)
+# dct_sp = np.divide(dct_sp, QUANTIZATION_MATRIX).astype(int)
+# print(dct_sp)
+#
+# print('-------------------')
+# print(image[25 * 8:25 * 8 + 8, :8])
+# curr = image[25 * 8:25 * 8 + 8, :8]
+# dct_sp = fftpack.dct(fftpack.dct(curr.T, norm='ortho').T, norm='ortho').astype(int)
+# print(dct_sp)
+# dct_sp = np.divide(dct_sp, QUANTIZATION_MATRIX).astype(int)
+# print(dct_sp)
+#
+# dct_img = dct_image(image)
+#
+# print('-------------------')
+# print(dct_img[0])
+# print()
+# print()
+# print()
+# print()
+#
+# calc_dct_img = calc_dct(image)
+# print(calc_dct_img[:8, :8])

@@ -9,18 +9,24 @@ import numpy as np
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
+from gui.RLE_and_Enthropy import RleAndEntropy
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
 from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
+from skimage import measure
+
 from gui.util_gui import calculate_size
+from util.bilinear_trasformation import bilinear_interpolation
 
 
 class PredictiveEncoding:
 
-    def __init__(self, root, img1, img2, img3, out):
+    def __init__(self, root, img1, img2, img3, out, filename):
+        self.filename = filename
+        self.entropy = None
         self.root = root
         self.image1 = img1
         self.image2 = img2
@@ -36,6 +42,8 @@ class PredictiveEncoding:
         self.quant = self.list_out[3] != 'N'
         self.quant_val = 0 if (not self.quant or self.list_out[3] == 'T') else int(self.list_out[3])
 
+        self.calc_entropy()
+
         # canvas
         self.height = 900
         self.width = 1500
@@ -43,7 +51,7 @@ class PredictiveEncoding:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.55, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.62, relwidth=0.6, relx=0.025, rely=0.25)
 
         # labels
         self.img_height = "Height: " + self.img_height
@@ -77,10 +85,14 @@ class PredictiveEncoding:
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
         self.label6.pack(side=tk.TOP, pady=20)
 
-        if self.quant_val is not 0:
+        if self.quant_val != 0:
             self.label7 = tk.Label(self.frame, text='Quantization value: ' + str(self.quant_val), justify=tk.CENTER,
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
             self.label7.pack(side=tk.TOP, pady=20)
+
+        self.label8 = tk.Label(self.frame, text='Entropy: ' + str(self.entropy), justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+        self.label8.pack(side=tk.TOP, pady=20)
 
         # drop-down frame
         self.button_frame = tk.Frame(self.canvas, bg="#354552")
@@ -88,7 +100,8 @@ class PredictiveEncoding:
 
         self.options1 = ["YES", "NO"]
         self.clicked1 = tk.StringVar()
-        self.clicked1.set("Do predictive encoding")
+        self.clicked1.set("NO")
+        # self.clicked1.set("Do predictive encoding")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
         self.drop.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -110,15 +123,15 @@ class PredictiveEncoding:
         self.canvas.pack()
 
     def accept_DCT(self):
-        print("-PREDICTIVE-")
         if self.clicked1.get() == 'YES':
             if self.has_dct:
-                # print(self.image1[25*8: 25*8+8, :8])
                 img1 = self.dct_predictive_encoding(self.image1)
                 img2 = self.dct_predictive_encoding(self.image2)
                 img3 = self.dct_predictive_encoding(self.image3)
 
                 self.out += 'T;'
+                self.canvas.destroy()
+                RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
             else:
                 if self.clicked2.get() == "Horizontal":
@@ -126,39 +139,34 @@ class PredictiveEncoding:
                     img2 = self.predictive_encoding(self.image2, 'h')
                     img3 = self.predictive_encoding(self.image3, 'h')
 
-                    self.out += 'V;'
+                    self.out += 'H;'
+                    self.canvas.destroy()
+                    RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
                 elif self.clicked2.get() == 'Vertical':
-                    img1 = self.predictive_encoding(self.image1, 'h')
-                    img2 = self.predictive_encoding(self.image2, 'h')
-                    img3 = self.predictive_encoding(self.image3, 'h')
+                    img1 = self.predictive_encoding(self.image1, 'v')
+                    img2 = self.predictive_encoding(self.image2, 'v')
+                    img3 = self.predictive_encoding(self.image3, 'v')
 
                     self.out += 'V;'
+                    self.canvas.destroy()
+                    RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
         else:
             self.out += 'N;'
+            self.canvas.destroy()
+            RleAndEntropy(self.root, self.image1, self.image2, self.image3, self.out, self.filename)
             # next screen self.image1,2,3 is sent
 
     def predictive_encoding(self, image, axis):
         h, w = image.shape
 
-        out_image = np.array(image)
+        image = np.reshape(image, h * w, order='F' if axis == 'v' else 'C')
+        image[1:] = np.subtract(image[1:], image[:-1])
 
-        prev = 0
-        for i in range(h if axis == 'h' else w):
-            for j in range(w if axis == 'v' else h):
-                if i == 0 and j == 0:
-                    prev = image[i, j]
-                    continue
+        image = np.reshape(image, (h, w), order='F' if axis == 'v' else 'C')
 
-                if axis == 'h':
-                    out_image[i, j] = image[i, j] - prev
-                    prev = image[i, j]
-                else:
-                    out_image[j, i] = image[j, i] - prev
-                    prev = image[j, i]
-
-        return out_image
+        return image
 
     def dct_predictive_encoding(self, image):
         h, w = image.shape
@@ -168,15 +176,27 @@ class PredictiveEncoding:
 
         out_img = np.array(image)
 
+
         for i in range(h):
             for j in range(w):
                 if i == 0 and j == 0:
                     prev = image[i * self.block_size, j * self.block_size]
                     continue
 
-                out_img[i * self.block_size, j * self.block_size] = image[
-                                                                        i * self.block_size, j * self.block_size] - prev
+                out_img[i * self.block_size, j * self.block_size] = \
+                    image[i * self.block_size, j * self.block_size] - prev
 
                 prev = image[i * self.block_size, j * self.block_size]
 
         return out_img
+
+    def calc_entropy(self):
+        image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
+        image[:, :, 0] = self.image1
+        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+
+        self.entropy = measure.shannon_entropy(image)
+        print("entropy4:", self.entropy)

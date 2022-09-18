@@ -6,6 +6,7 @@ from os import *
 from tkinter import filedialog
 
 import numpy as np
+import skimage.measure
 from PIL import ImageTk, Image
 from tkinterdnd2 import DND_FILES
 
@@ -17,11 +18,13 @@ from jpeg.dictionary_util import *
 from jpeg.image_scaling import upscale
 
 from gui.util_gui import calculate_size
+from util.bilinear_trasformation import bilinear_interpolation
 
 
 class QuantizeImage:
 
-    def __init__(self, root, img1, img2, img3, out):
+    def __init__(self, root, img1, img2, img3, out, filename):
+        self.filename = filename
         self.quant = None
         self.root = root
         self.image1 = img1.astype(int)
@@ -31,10 +34,13 @@ class QuantizeImage:
         self.list_out = self.out.split(';')
         self.has_dct = self.list_out[2] != '0'
         self.block_size = 16 if self.list_out[2] == '6' else int(self.list_out[2])
+        self.entropy = 0
 
         self.img_height, self.img_width = self.list_out[0].split('x')
         self.color_space = 'RBG' if self.list_out[1] == 'R' else ('YCbCr444' if self.list_out[1] == '4' else 'YCbCr420')
         self.dct = 'Has DCT' if self.has_dct else 'Does not have DCT'
+
+        self.calc_entropy()
 
         # canvas
         self.height = 900
@@ -43,7 +49,7 @@ class QuantizeImage:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.45, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.55, relwidth=0.6, relx=0.025, rely=0.25)
 
         # labels
         self.img_height = "Height: " + self.img_height
@@ -73,13 +79,19 @@ class QuantizeImage:
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
             self.label5.pack(side=tk.TOP, pady=20)
 
+        self.label6 = tk.Label(self.frame, text='Entropy: ' + str(self.entropy),
+                               justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+        self.label6.pack(side=tk.TOP, pady=20)
+
         # drop-down frame
         self.button_frame = tk.Frame(self.canvas, bg="#354552")
         self.button_frame.place(relwidth=0.325, relheight=0.3, relx=0.65, rely=0.3)
 
         self.options1 = ["YES", "NO"]
         self.clicked1 = tk.StringVar()
-        self.clicked1.set("Quantize image")
+        self.clicked1.set("YES")
+        # self.clicked1.set("Quantize image")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
         self.drop.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -88,7 +100,8 @@ class QuantizeImage:
         if not self.has_dct:
             self.options2 = ["2", "4", "8"]
             self.clicked2 = tk.StringVar()
-            self.clicked2.set("Choose quantization parameter")
+            self.clicked2.set("2")
+            # self.clicked2.set("Choose quantization parameter")
 
             self.drop2 = tk.OptionMenu(self.button_frame, self.clicked2, *self.options2)
             self.drop2.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -109,28 +122,37 @@ class QuantizeImage:
 
                 self.out += 'T;'
 
-                print(img1[:self.block_size, :self.block_size])
-                print(self.image1[:self.block_size, :self.block_size])
-
                 self.canvas.destroy()
-                PredictiveEncoding(self.root, img1, img2, img3, self.out)
+                PredictiveEncoding(self.root, img1, img2, img3, self.out, self.filename)
 
             else:
                 if self.clicked2.get() in self.options2:
                     self.quant = int(self.clicked2.get())
 
-                    img1 = np.divide(self.image1, self.quant)
-                    img2 = np.divide(self.image2, self.quant)
-                    img3 = np.divide(self.image3, self.quant)
+                    img1 = np.divide(self.image1, self.quant).astype(int)
+                    img2 = np.divide(self.image2, self.quant).astype(int)
+                    img3 = np.divide(self.image3, self.quant).astype(int)
 
                     self.out += self.clicked2.get() + ';'
 
                     self.canvas.destroy()
-                    PredictiveEncoding(self.root, img1, img2, img3, self.out)
+                    PredictiveEncoding(self.root, img1, img2, img3, self.out, self.filename)
         elif self.clicked1.get() == 'NO':
             self.out += 'N;'
             self.canvas.destroy()
-            PredictiveEncoding(self.root, self.image1, self.image2, self.image3, self.out)
+            PredictiveEncoding(self.root, self.image1, self.image2, self.image3, self.out, self.filename)
+
+    def calc_entropy(self):
+        image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))
+
+        image[:, :, 0] = self.image1
+        image[:, :, 1] = self.image2 if '420' not in self.color_space else bilinear_interpolation(self.image2, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+        image[:, :, 2] = self.image3 if '420' not in self.color_space else bilinear_interpolation(self.image3, 2)[
+                                                                           :self.image1.shape[0], :self.image1.shape[1]]
+
+        self.entropy = skimage.measure.shannon_entropy(image)
+        print("entropy3:", self.entropy)
 
 
 def quantize_images(image, block_size):
