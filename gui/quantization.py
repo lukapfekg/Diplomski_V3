@@ -23,7 +23,8 @@ from util.bilinear_trasformation import bilinear_interpolation
 
 class QuantizeImage:
 
-    def __init__(self, root, img1, img2, img3, out):
+    def __init__(self, root, img1, img2, img3, out, filename):
+        self.filename = filename
         self.quant = None
         self.root = root
         self.image1 = img1.astype(int)
@@ -122,7 +123,7 @@ class QuantizeImage:
                 self.out += 'T;'
 
                 self.canvas.destroy()
-                PredictiveEncoding(self.root, img1, img2, img3, self.out)
+                PredictiveEncoding(self.root, img1, img2, img3, self.out, self.filename)
 
             else:
                 if self.clicked2.get() in self.options2:
@@ -135,11 +136,11 @@ class QuantizeImage:
                     self.out += self.clicked2.get() + ';'
 
                     self.canvas.destroy()
-                    PredictiveEncoding(self.root, img1, img2, img3, self.out)
+                    PredictiveEncoding(self.root, img1, img2, img3, self.out, self.filename)
         elif self.clicked1.get() == 'NO':
             self.out += 'N;'
             self.canvas.destroy()
-            PredictiveEncoding(self.root, self.image1, self.image2, self.image3, self.out)
+            PredictiveEncoding(self.root, self.image1, self.image2, self.image3, self.out, self.filename)
 
     def calc_entropy(self):
         image = np.zeros((self.image1.shape[0], self.image1.shape[1], 3))

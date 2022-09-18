@@ -119,7 +119,7 @@ class ChooseColorSpace:
                 g = image[:, :, 1]
                 b = image[:, :, 2]
                 self.out = self.out + 'R;'
-                ChooseDCT(self.root, s, r, g, b, self.out)
+                ChooseDCT(self.root, s, r, g, b, self.out, self.filename)
 
             else:
                 image = Image.open(self.filename).convert('YCbCr')
@@ -132,7 +132,7 @@ class ChooseColorSpace:
                     cr = blockify(cr)
 
                 self.out = self.out + ('4;' if '444' in s else '2;')
-                ChooseDCT(self.root, s, y, cb, cr, self.out)
+                ChooseDCT(self.root, s, y, cb, cr, self.out, self.filename)
 
     def calc_entropy(self):
         image = Image.open(self.filename)

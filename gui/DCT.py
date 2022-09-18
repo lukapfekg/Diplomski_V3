@@ -25,7 +25,8 @@ from util.bilinear_trasformation import bilinear_interpolation
 
 class ChooseDCT:
 
-    def __init__(self, root, color_space, img1, img2, img3, out):
+    def __init__(self, root, color_space, img1, img2, img3, out, filename):
+        self.filename = filename
         self.show_image2 = None
         self.show_image1 = None
         self.root = root
@@ -240,12 +241,12 @@ class ChooseDCT:
                     dct_image3 = calc_dct(self.img3, block_size)
 
                     self.canvas.destroy()
-                    QuantizeImage(self.root, dct_image1, dct_image2, dct_image3, self.out)
+                    QuantizeImage(self.root, dct_image1, dct_image2, dct_image3, self.out, self.filename)
 
             else:
                 self.out = self.out + '0;'
                 self.canvas.destroy()
-                QuantizeImage(self.root, self.img1, self.img2, self.img3, self.out)
+                QuantizeImage(self.root, self.img1, self.img2, self.img3, self.out, self.filename)
 
         else:
             print('ERROR')

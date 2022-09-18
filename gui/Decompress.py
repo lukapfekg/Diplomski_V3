@@ -17,6 +17,7 @@ from tkinterdnd2 import DND_FILES
 
 # from encoding.huffman_class import make_tree, huffman_code_tree, create_huff_dict
 from encoding.rle_modular import rle_modular
+from gui.ResultWindow import ResultWindow
 from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
 from jpeg.compression import image_compression
 from jpeg.decompression import *
@@ -32,7 +33,7 @@ from util.dictionary_util_modular import decompress_dict_modular
 
 class Decompression:
 
-    def __init__(self, root, image, out):
+    def __init__(self, root, image, out, filename):
         self.decompressed = None
         self.entropy = 0
         self.encoding = 0
@@ -49,7 +50,9 @@ class Decompression:
         self.dictionary = dict()
         self.root = root
         self.image_bin = image
+        self.compressed_size = len(image)
         self.out = out
+        self.filename = filename
 
         bin_file = builtins.open("compressed_image_bin.dat", 'w')
         bin_file.write(self.image_bin)
@@ -203,6 +206,7 @@ class Decompression:
                 image[:, :, 0] = image1.astype(np.uint8)
                 image[:, :, 1] = image2.astype(np.uint8)
                 image[:, :, 2] = image3.astype(np.uint8)
+                out_image = image.copy()
 
                 original = Image.open("../Examples/miner.jpg").convert(
                     'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
@@ -222,16 +226,20 @@ class Decompression:
 
                 image.save("decompressed.jpg")
 
+                self.canvas.destroy()
+                ResultWindow(self.root, self.filename, out_image, self.color_space,
+                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
+
             else:
                 start = time.time()
                 rle = self.get_rle_no_dct()
                 end = time.time()
-                print(end-start)
+                print(end - start)
 
                 start = time.time()
                 image1, image2, image3 = self.get_images_no_dct(rle)
                 end = time.time()
-                print(end-start)
+                print(end - start)
 
                 if self.predictive:
                     image1 = self.inverse_predictive(image1)
@@ -256,6 +264,8 @@ class Decompression:
                 image[:, :, 1] = image2.astype(np.uint8)
                 image[:, :, 2] = image3.astype(np.uint8)
 
+                out_image = image.copy()
+
                 original = Image.open("../Examples/miner.jpg").convert(
                     'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
                 original = np.array(original)
@@ -273,6 +283,10 @@ class Decompression:
                 # image = image.convert('RGB')
 
                 image.save("decompressed_no_dct.jpg")
+
+                self.canvas.destroy()
+                ResultWindow(self.root, self.filename, out_image, self.color_space,
+                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
 
             aa = 5
 

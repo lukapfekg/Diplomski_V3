@@ -32,7 +32,8 @@ sys.setrecursionlimit(9999)
 
 class RleAndEntropy:
 
-    def __init__(self, root, img1, img2, img3, out):
+    def __init__(self, root, img1, img2, img3, out, filename):
+        self.filename = filename
         self.root = root
         self.image1 = img1
         self.image2 = img2
@@ -162,7 +163,7 @@ class RleAndEntropy:
                     img_bin = string_to_ascii(self.out) + huff_dict + coded_arr
 
                     self.canvas.destroy()
-                    Decompression(self.root, img_bin, self.out)
+                    Decompression(self.root, img_bin, self.out, self.filename)
 
                 else:
                     arr1 = flatten_image(self.image1, not self.vertical)
@@ -180,7 +181,7 @@ class RleAndEntropy:
                     img_bin = string_to_ascii(self.out) + huff_dict + coded_arr
 
                     self.canvas.destroy()
-                    Decompression(self.root, img_bin, self.out)
+                    Decompression(self.root, img_bin, self.out, self.filename)
 
             elif entropy:
                 entropy_array = flatten_image(self.image1, self.vertical)
@@ -194,7 +195,7 @@ class RleAndEntropy:
                 img_bin = string_to_ascii(self.out) + huff_dict + coded_arr
 
                 self.canvas.destroy()
-                Decompression(self.root, img_bin, self.out)
+                Decompression(self.root, img_bin, self.out, self.filename)
 
 
 def blockify(image, block_size):

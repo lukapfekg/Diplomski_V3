@@ -24,7 +24,8 @@ from util.bilinear_trasformation import bilinear_interpolation
 
 class PredictiveEncoding:
 
-    def __init__(self, root, img1, img2, img3, out):
+    def __init__(self, root, img1, img2, img3, out, filename):
+        self.filename = filename
         self.entropy = None
         self.root = root
         self.image1 = img1
@@ -130,7 +131,7 @@ class PredictiveEncoding:
 
                 self.out += 'T;'
                 self.canvas.destroy()
-                RleAndEntropy(self.root, img1, img2, img3, self.out)
+                RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
             else:
                 if self.clicked2.get() == "Horizontal":
@@ -140,21 +141,21 @@ class PredictiveEncoding:
 
                     self.out += 'H;'
                     self.canvas.destroy()
-                    RleAndEntropy(self.root, img1, img2, img3, self.out)
+                    RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
                 elif self.clicked2.get() == 'Vertical':
-                    img1 = self.predictive_encoding(self.image1, 'h')
-                    img2 = self.predictive_encoding(self.image2, 'h')
-                    img3 = self.predictive_encoding(self.image3, 'h')
+                    img1 = self.predictive_encoding(self.image1, 'v')
+                    img2 = self.predictive_encoding(self.image2, 'v')
+                    img3 = self.predictive_encoding(self.image3, 'v')
 
                     self.out += 'V;'
                     self.canvas.destroy()
-                    RleAndEntropy(self.root, img1, img2, img3, self.out)
+                    RleAndEntropy(self.root, img1, img2, img3, self.out, self.filename)
 
         else:
             self.out += 'N;'
             self.canvas.destroy()
-            RleAndEntropy(self.root, self.image1, self.image2, self.image3, self.out)
+            RleAndEntropy(self.root, self.image1, self.image2, self.image3, self.out, self.filename)
             # next screen self.image1,2,3 is sent
 
     def predictive_encoding(self, image, axis):
@@ -164,36 +165,6 @@ class PredictiveEncoding:
         image[1:] = np.subtract(image[1:], image[:-1])
 
         image = np.reshape(image, (h, w), order='F' if axis == 'v' else 'C')
-
-        # out_image = np.array(image)
-        #
-        # prev = 0
-        #
-        # h_info = h if axis == 'h' else w
-        # w_info = w if axis == 'v' else h
-        #
-        # for i in range(h if axis == 'h' else w):
-        #     for j in range(w if axis == 'h' else h):
-        #         if i == 0 and j == 0:
-        #             prev = image[i, j]
-        #             continue
-        #
-        #         if axis == 'h':
-        #             out_image[i, j] = image[i, j] - prev
-        #             prev = image[i, j]
-        #         else:
-        #             out_image[j, i] = image[j, i] - prev
-        #             prev = image[j, i]
-        #
-        # # image = np.reshape(image, h * w, order='F' if axis == 'v' else 'C')
-        # #
-        # #
-        # #
-        # # image[1:] = np.add(image[:-1], image[1:])
-        # #
-        # # image = np.reshape(image, (h, w), order='F' if axis == 'v' else 'C')
-        #
-        # print(out_image == image_r2)
 
         return image
 
