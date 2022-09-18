@@ -1,33 +1,9 @@
-import builtins
-import time
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
-
-import numpy
-import numpy as np
-import skimage.metrics
-from PIL import ImageTk, Image
-from bitarray import bitarray
-from dahuffman import HuffmanCodec
-from tkinterdnd2 import DND_FILES
-
-# from encoding.huffman_class import make_tree, huffman_code_tree, create_huff_dict
-from encoding.rle_modular import rle_modular
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
-from jpeg.decompression import *
-from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
-
-from skimage import measure
 
 from gui.util_gui import calculate_size
-from util.bilinear_trasformation import bilinear_interpolation
-from util.dictionary_util_modular import decompress_dict_modular
+from gui.util_gui import convert_bits
+from jpeg.decompression import *
+from jpeg.dictionary_util import *
 
 
 class ResultWindow:

@@ -1,24 +1,9 @@
-import tkinter
 import tkinter as tk
-import os
-from multiprocessing import Pool
-from os import *
-from tkinter import filedialog
-
-import numpy as np
-from PIL import ImageTk, Image
-from tkinterdnd2 import DND_FILES
-
-from gui.RLE_and_Enthropy import RleAndEntropy
-from gui.util_gui import calculate_size, get_histogram, write_array_to_file, convert_bits
-from jpeg.compression import image_compression
-from jpeg.decompression import *
-from jpeg.dictionary_util import *
-from jpeg.image_scaling import upscale
 
 from skimage import measure
 
-from gui.util_gui import calculate_size
+from gui.RLE_and_Enthropy import RleAndEntropy
+from jpeg.dictionary_util import *
 from util.bilinear_trasformation import bilinear_interpolation
 
 

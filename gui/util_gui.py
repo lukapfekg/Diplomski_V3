@@ -1,12 +1,7 @@
-import numpy as np
-import itertools
-import time
-from collections import Counter
 import math
+from collections import Counter
 
-from PIL import ImageTk, Image
-
-from jpeg.lossless_compression import write_file
+import numpy as np
 
 
 def calculate_size(c_width, c_height, i_width, i_height):
