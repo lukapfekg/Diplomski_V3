@@ -288,23 +288,110 @@ class Decompression:
                 ResultWindow(self.root, self.filename, out_image, self.color_space,
                              int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
 
-            aa = 5
-
         elif 'Entropy' in self.encoding:
-            # Counts occurrences of a pixel
-            # get array of pixels
+            image1, image2, image3 = self.from_bit_array()
 
-            # create vertical image
+            if self.has_dct:
+                if self.predictive:
+                    image1 = self.inverse_predictive_dct(image1)
+                    image2 = self.inverse_predictive_dct(image2)
+                    image3 = self.inverse_predictive_dct(image3)
 
-            if self.predictive:
-                # inverse predictive
-                aa = 4
+                if self.quant:
+                    image1 = self.inverse_quantization(image1, False)
+                    image2 = self.inverse_quantization(image2, False)
+                    image3 = self.inverse_quantization(image3, False)
 
-            if self.quant:
-                # inverse quantization
-                aa = 4
+                image1 = self.inverse_dct(image1, True, False)
+                image2 = self.inverse_dct(image2, False, False)
+                image3 = self.inverse_dct(image3, False, False)
 
-            aa = 5
+                if '420' in self.color_space:
+                    image2 = bilinear_interpolation(image2, 2)
+                    image3 = bilinear_interpolation(image3, 2)
+
+                image1 = image1[:int(self.image_height), :int(self.image_width)]
+                image2 = image2[:int(self.image_height), :int(self.image_width)]
+                image3 = image3[:int(self.image_height), :int(self.image_width)]
+
+                image = np.zeros((int(self.image_height), int(self.image_width), 3)).astype(np.uint8)
+                image[:, :, 0] = image1.astype(np.uint8)
+                image[:, :, 1] = image2.astype(np.uint8)
+                image[:, :, 2] = image3.astype(np.uint8)
+
+                out_image = image.copy()
+
+                original = Image.open("../Examples/miner.jpg").convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = np.array(original)
+
+                print("----PSNR----")
+
+                psnr_orig = skimage.metrics.peak_signal_noise_ratio(original, original)
+                print(psnr_orig)
+                psnr = skimage.metrics.peak_signal_noise_ratio(original, image)
+                print(psnr)
+
+                image = Image.fromarray(image, mode='YCbCr') if 'Y' in self.image_color_space else Image.fromarray(
+                    image, mode='RGB')
+                print(image.mode)
+                # image = image.convert('RGB')
+
+                image.save("decompressed_no_dct.jpg")
+
+                self.canvas.destroy()
+                ResultWindow(self.root, self.filename, out_image, self.color_space,
+                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
+
+            else:
+                image1, image2, image3 = self.from_bit_array()
+
+                if self.predictive:
+                    image1 = self.inverse_predictive(image1)
+                    image2 = self.inverse_predictive(image2)
+                    image3 = self.inverse_predictive(image3)
+
+                if self.quant:
+                    image1 = np.multiply(image1, self.quant_val)
+                    image2 = np.multiply(image2, self.quant_val)
+                    image3 = np.multiply(image3, self.quant_val)
+
+                if '420' in self.color_space:
+                    image2 = bilinear_interpolation(image2, 2)
+                    image3 = bilinear_interpolation(image3, 2)
+
+                image1 = image1[:int(self.image_height), :int(self.image_width)]
+                image2 = image2[:int(self.image_height), :int(self.image_width)]
+                image3 = image3[:int(self.image_height), :int(self.image_width)]
+
+                image = np.zeros((int(self.image_height), int(self.image_width), 3)).astype(np.uint8)
+                image[:, :, 0] = image1.astype(np.uint8)
+                image[:, :, 1] = image2.astype(np.uint8)
+                image[:, :, 2] = image3.astype(np.uint8)
+
+                out_image = image.copy()
+
+                original = Image.open("../Examples/miner.jpg").convert(
+                    'YCbCr') if 'Y' in self.image_color_space else Image.open("../Examples/miner.jpg")
+                original = np.array(original)
+
+                print("----PSNR----")
+
+                psnr_orig = skimage.metrics.peak_signal_noise_ratio(original, original)
+                print(psnr_orig)
+                psnr = skimage.metrics.peak_signal_noise_ratio(original, image)
+                print(psnr)
+
+                image = Image.fromarray(image, mode='YCbCr') if 'Y' in self.image_color_space else Image.fromarray(
+                    image, mode='RGB')
+                print(image.mode)
+                # image = image.convert('RGB')
+
+                image.save("decompressed_no_dct.jpg")
+
+                self.canvas.destroy()
+                ResultWindow(self.root, self.filename, out_image, self.color_space,
+                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
 
         self.decompressed = None
 
@@ -364,18 +451,40 @@ class Decompression:
 
         return image1, image2, image3
 
-    def inverse_quantization(self, array):
+    def inverse_quantization(self, array, RLE=True):
         quant = QUANTIZATION_MATRIX if self.block_size == 8 else (
             QUANTIZATION_MATRIX_16 if self.block_size == 16 else QUANTIZATION_MATRIX_4)
 
         out_array = []
 
-        for elem in array:
-            out_array.append(np.multiply(elem, quant))
+        if RLE:
+            for elem in array:
+                out_array.append(np.multiply(elem, quant))
+
+        else:
+            h, w = array.shape
+
+            h = int(h // self.block_size)
+            w = int(w // self.block_size)
+
+            for i in range(h):
+                for j in range(w):
+                    temp = array[i * self.block_size: i * self.block_size + self.block_size,
+                           j * self.block_size:j * self.block_size + self.block_size]
+                    mul = np.multiply(
+                        array[i * self.block_size: i * self.block_size + self.block_size,
+                        j * self.block_size:j * self.block_size + self.block_size],
+                        quant
+                    )
+
+                    array[i * self.block_size: i * self.block_size + self.block_size,
+                    j * self.block_size:j * self.block_size + self.block_size] = np.multiply(temp, quant)
+
+            out_array = array.copy()
 
         return out_array
 
-    def inverse_dct(self, array, first=True):
+    def inverse_dct(self, array, first=True, RLE=True):
         h = int(self.image_height) if '0' not in self.color_space or first else int(
             np.ceil(int(self.image_height) / 2))
         w = int(self.image_width) if '0' not in self.color_space or first else int(
@@ -387,7 +496,11 @@ class Decompression:
         k = 0
         for i in range(h // self.block_size):
             for j in range(w // self.block_size):
-                tek = array[k]
+                tek = array[k] \
+                    if RLE else \
+                    array[i * self.block_size:i * self.block_size + self.block_size,
+                    j * self.block_size:j * self.block_size + self.block_size]
+
                 tek = fftpack.idct(fftpack.idct(tek.T, norm='ortho').T, norm='ortho').astype(int)
                 tek += 128
                 tek[tek < 0] = 0
@@ -455,6 +568,55 @@ class Decompression:
             curr = image[i]
 
         image = np.reshape(image, (h, w), order='F' if self.vertical else 'C')
+
+        return image
+
+    def from_bit_array(self):
+        dec = bitarray(self.image).decode(self.dictionary)
+
+        h = int(self.image_height)
+        w = int(self.image_width)
+        if self.has_dct:
+            h += 0 if h % self.block_size == 0 else self.block_size - h % self.block_size
+            w += 0 if w % self.block_size == 0 else self.block_size - w % self.block_size
+
+        image1 = np.reshape(dec[:h * w], (h, w), order='F' if self.vertical else 'C')
+        dec = dec[h * w:]
+
+        if '0' in self.color_space:
+            h = int(np.ceil(int(self.image_height) / 2))
+            w = int(np.ceil(int(self.image_width) / 2))
+
+            if self.block_size != 0:
+                h += 0 if h % self.block_size == 0 else self.block_size - h % self.block_size
+                w += 0 if w % self.block_size == 0 else self.block_size - w % self.block_size
+
+        image2 = np.reshape(dec[:h * w], (h, w), order='F' if self.vertical else 'C')
+        dec = dec[h * w:]
+        image3 = np.reshape(dec[:h * w], (h, w), order='F' if self.vertical else 'C')
+        dec = dec[h * w:]
+
+        print(dec[:20])
+        print(image1[:8, :8])
+        print('type', type(image1[0, 0]))
+
+        return image1.astype(int), image2.astype(int), image3.astype(int)
+
+    def inverse_predictive_dct(self, image):
+        h, w = image.shape
+
+        h = int(h // self.block_size)
+        w = int(w // self.block_size)
+
+        prev = 0
+        for i in range(h):
+            for j in range(w):
+                if i == 0 and j == 0:
+                    prev = image[i, j]
+                    continue
+
+                image[i * self.block_size, j * self.block_size] = prev + image[i * self.block_size, j * self.block_size]
+                prev = image[i * self.block_size, j * self.block_size]
 
         return image
 

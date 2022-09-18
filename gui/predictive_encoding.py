@@ -176,14 +176,15 @@ class PredictiveEncoding:
 
         out_img = np.array(image)
 
+
         for i in range(h):
             for j in range(w):
                 if i == 0 and j == 0:
                     prev = image[i * self.block_size, j * self.block_size]
                     continue
 
-                out_img[i * self.block_size, j * self.block_size] = image[
-                                                                        i * self.block_size, j * self.block_size] - prev
+                out_img[i * self.block_size, j * self.block_size] = \
+                    image[i * self.block_size, j * self.block_size] - prev
 
                 prev = image[i * self.block_size, j * self.block_size]
 

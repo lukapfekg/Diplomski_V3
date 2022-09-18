@@ -184,9 +184,9 @@ class RleAndEntropy:
                     Decompression(self.root, img_bin, self.out, self.filename)
 
             elif entropy:
-                entropy_array = flatten_image(self.image1, self.vertical)
-                entropy_array += flatten_image(self.image2, self.vertical)
-                entropy_array += flatten_image(self.image3, self.vertical)
+                entropy_array = flatten_image(self.image1, not self.vertical)
+                entropy_array += flatten_image(self.image2, not self.vertical)
+                entropy_array += flatten_image(self.image3, not self.vertical)
 
                 huff_dict, coded_arr = find_huffman_dict_and_array(entropy_array)
 
@@ -223,11 +223,9 @@ def blockify(image, block_size):
 def flatten_image(image, horizontal=True):
     h, w = image.shape
 
-    out = []
+    print("FROM RLE END ENTR", image[0, :80:8])
 
-    for i in range(h if horizontal else w):
-        for j in range(w if horizontal else h):
-            out.append(str(image[i, j] if horizontal else image[j, i]))
+    out = list(np.reshape(image, h * w, order='C' if horizontal else 'F').astype(str))
 
     return out
 
@@ -245,6 +243,7 @@ def find_huffman_dict_and_array(rle_array):
     compressed_dict = compress_dict_modular(str(huff_dict))
 
     return compressed_dict, huff_code
+
 
 def tuple_to_bin(t):
     bits, val = t
