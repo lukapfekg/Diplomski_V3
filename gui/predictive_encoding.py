@@ -51,7 +51,7 @@ class PredictiveEncoding:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.62, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.62, relwidth=0.6, relx=0.025, rely=0.20)
 
         # labels
         self.img_height = "Height: " + self.img_height

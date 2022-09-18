@@ -65,7 +65,7 @@ class Decompression:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.62, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.72, relwidth=0.6, relx=0.025, rely=0.12)
 
         self.read_file()
         print("image bin len: ", len(self.image_bin))
@@ -74,43 +74,53 @@ class Decompression:
         self.img_height = "Height: " + str(self.image_height)
         self.label1 = tk.Label(self.frame, text=self.img_height, justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label1.pack(side=tk.TOP, pady=20)
+        self.label1.pack(side=tk.TOP, pady=15)
 
         self.img_width = "Width: " + str(self.image_width)
         self.label2 = tk.Label(self.frame, text=self.img_width, justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label2.pack(side=tk.TOP, pady=20)
+        self.label2.pack(side=tk.TOP, pady=15)
 
         self.color_space = "Color space: " + self.image_color_space
         self.label3 = tk.Label(self.frame, text=self.color_space, justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label3.pack(side=tk.TOP, pady=20)
+        self.label3.pack(side=tk.TOP, pady=15)
 
         self.dct = 'Has DCT' if self.has_dct else 'No DCT'
         self.dct = "DCT: " + self.dct
         self.label4 = tk.Label(self.frame, text=self.dct, justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label4.pack(side=tk.TOP, pady=20)
+        self.label4.pack(side=tk.TOP, pady=15)
 
         if self.has_dct:
             self.dct = "DCT: " + self.dct
             self.label5 = tk.Label(self.frame, text='Block size: ' + str(self.block_size) + 'x' + str(self.block_size),
                                    justify=tk.CENTER,
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-            self.label5.pack(side=tk.TOP, pady=20)
+            self.label5.pack(side=tk.TOP, pady=15)
 
         self.label6 = tk.Label(self.frame, text='Quantization: ' + str(self.quant), justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label6.pack(side=tk.TOP, pady=20)
+        self.label6.pack(side=tk.TOP, pady=15)
 
         if self.quant_val != 0:
             self.label7 = tk.Label(self.frame, text='Quantization value: ' + str(self.quant_val), justify=tk.CENTER,
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-            self.label7.pack(side=tk.TOP, pady=20)
+            self.label7.pack(side=tk.TOP, pady=15)
+
+        pred = 'No' if not self.predictive else 'Yes' if self.dct else 'Vertical' if self.vertical else 'Horizontal'
+        self.label9 = tk.Label(self.frame, text='Predictive encoding: ' + pred, justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+        self.label9.pack(side=tk.TOP, pady=15)
 
         self.label8 = tk.Label(self.frame, text='Encoding: ' + str(self.encoding), justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
-        self.label8.pack(side=tk.TOP, pady=20)
+        self.label8.pack(side=tk.TOP, pady=15)
+
+        compression_rate = int(self.image_height)*int(self.image_width)*3*8 / self.compressed_size
+        self.label10 = tk.Label(self.frame, text='Compression rate: ' + str(compression_rate), justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+        self.label10.pack(side=tk.TOP, pady=15)
 
         # drop-down frame
         self.button_frame = tk.Frame(self.canvas, bg="#354552")
