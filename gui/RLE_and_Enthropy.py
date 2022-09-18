@@ -65,7 +65,7 @@ class RleAndEntropy:
 
         # info frame
         self.frame = tk.Frame(self.canvas, bg="#354552")
-        self.frame.place(relheight=0.62, relwidth=0.6, relx=0.025, rely=0.25)
+        self.frame.place(relheight=0.72, relwidth=0.6, relx=0.025, rely=0.15)
 
         # labels
         self.img_height = "Height: " + self.img_height
@@ -104,13 +104,18 @@ class RleAndEntropy:
                                    width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
             self.label7.pack(side=tk.TOP, pady=20)
 
-        self.label8 = tk.Label(self.frame, text='Entropy: ' + str(self.entropy), justify=tk.CENTER,
+        pred = 'No' if not self.predictive else 'Yes' if self.dct else 'Vertical' if self.vertical else 'Horizontal'
+        self.label8 = tk.Label(self.frame, text='Predictive encoding: ' + pred, justify=tk.CENTER,
                                width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
         self.label8.pack(side=tk.TOP, pady=20)
 
+        self.label9 = tk.Label(self.frame, text='Entropy: ' + str(self.entropy), justify=tk.CENTER,
+                               width=80, height=1, font=("Roboto", 22, "bold"), bg="#354552", fg="white")
+        self.label9.pack(side=tk.TOP, pady=20)
+
         # drop-down frame
         self.button_frame = tk.Frame(self.canvas, bg="#354552")
-        self.button_frame.place(relwidth=0.2, relheight=0.2, relx=0.79, rely=0.3)
+        self.button_frame.place(relwidth=0.325, relheight=0.3, relx=0.65, rely=0.3)
 
         # drop down menu
         self.options1 = ["Entropy", "RLE and Entropy"]
@@ -118,8 +123,8 @@ class RleAndEntropy:
         self.clicked1.set("RLE and Entropy")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
-        self.drop.config(width=30, font=("Roboto", 12, "bold"), foreground="#FFFFFF", background="#263D42")
-        self.drop.pack()
+        self.drop.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
+        self.drop.pack(side=tk.TOP, pady=10)
 
         button_dropdown = tk.Button(self.button_frame, text="Choose", height=5, width=25, fg="white", bg="#263D42")
         button_dropdown.configure(command=self.accept_encoding)
