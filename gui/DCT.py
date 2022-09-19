@@ -72,8 +72,8 @@ class ChooseDCT:
             # drop down menu
             self.options1 = ["DCT", "No DCT"]
             self.clicked1 = tk.StringVar()
-            self.clicked1.set("DCT")
-            # self.clicked1.set("Choose transformation encoding")
+            # self.clicked1.set("DCT")
+            self.clicked1.set("Choose transformation encoding")
 
             self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
             self.drop.config(width=30, font=("Roboto", 12, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -81,8 +81,8 @@ class ChooseDCT:
 
             self.options2 = ["4x4", "8x8", "16x16"]
             self.clicked2 = tk.StringVar()
-            self.clicked2.set("8x8")
-            # self.clicked2.set("Choose block size")
+            # self.clicked2.set("16x16")
+            self.clicked2.set("Choose block size")
 
             self.drop2 = tk.OptionMenu(self.button_frame, self.clicked2, *self.options2)
             self.drop2.config(width=30, font=("Roboto", 12, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -114,7 +114,7 @@ class ChooseDCT:
             # drop down menu
             self.options1 = ["DCT", "No DCT"]
             self.clicked1 = tk.StringVar()
-            self.clicked1.set("Choose transformation encoding")
+            self.clicked1.set("Choose transformational encoding")
 
             self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
             self.drop.config(width=30, font=("Roboto", 12, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -238,8 +238,10 @@ class ChooseDCT:
     def calc_entropy(self):
         image = np.zeros((self.img1.shape[0], self.img1.shape[1], 3))
         image[:, :, 0] = self.img1
-        image[:, :, 1] = self.img2 if '420' not in self.color_space else bilinear_interpolation(self.img2, 2)[:-1, :-1]
-        image[:, :, 2] = self.img3 if '420' not in self.color_space else bilinear_interpolation(self.img3, 2)[:-1, :-1]
+        image[:, :, 1] = self.img2 if '420' not in self.color_space else bilinear_interpolation(self.img2, 2)[
+                                                                         :self.img1.shape[0], :self.img1.shape[1]]
+        image[:, :, 2] = self.img3 if '420' not in self.color_space else bilinear_interpolation(self.img3, 2)[
+                                                                         :self.img1.shape[0], :self.img1.shape[1]]
 
         self.entropy = measure.shannon_entropy(image)
         # print("entropy2:", self.entropy)

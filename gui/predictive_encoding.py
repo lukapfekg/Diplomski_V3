@@ -85,8 +85,8 @@ class PredictiveEncoding:
 
         self.options1 = ["YES", "NO"]
         self.clicked1 = tk.StringVar()
-        self.clicked1.set("NO")
-        # self.clicked1.set("Do predictive encoding")
+        # self.clicked1.set("NO")
+        self.clicked1.set("Do predictive encoding")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked1, *self.options1)
         self.drop.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")
@@ -95,7 +95,7 @@ class PredictiveEncoding:
         if not self.has_dct:
             self.options2 = ["Horizontal", "Vertical"]
             self.clicked2 = tk.StringVar()
-            self.clicked2.set("Choose quantization parameter")
+            self.clicked2.set("Horizontal or vertical")
 
             self.drop2 = tk.OptionMenu(self.button_frame, self.clicked2, *self.options2)
             self.drop2.config(width=40, font=("Roboto", 18, "bold"), foreground="#FFFFFF", background="#263D42")

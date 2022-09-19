@@ -218,7 +218,7 @@ class Decompression:
 
                 self.canvas.destroy()
                 ResultWindow(self.root, self.filename, out_image, self.color_space,
-                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
+                             int(self.image_height) * int(self.image_width) * 3 * 8, self.compressed_size)
 
             else:
                 start = time.time()
@@ -276,7 +276,7 @@ class Decompression:
 
                 self.canvas.destroy()
                 ResultWindow(self.root, self.filename, out_image, self.color_space,
-                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
+                             int(self.image_height) * int(self.image_width) * 3 * 8, self.compressed_size)
 
         elif 'Entropy' in self.encoding:
             image1, image2, image3 = self.from_bit_array()
@@ -331,7 +331,7 @@ class Decompression:
 
                 self.canvas.destroy()
                 ResultWindow(self.root, self.filename, out_image, self.color_space,
-                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
+                             int(self.image_height) * int(self.image_width) * 3 * 8, self.compressed_size)
 
             else:
                 image1, image2, image3 = self.from_bit_array()
@@ -381,9 +381,7 @@ class Decompression:
 
                 self.canvas.destroy()
                 ResultWindow(self.root, self.filename, out_image, self.color_space,
-                             int(self.height) * int(self.width) * 3 * 8, self.compressed_size)
-
-        self.decompressed = None
+                             int(self.image_height) * int(self.image_width) * 3 * 8, self.compressed_size)
 
     def from_bit_array_to_zigzag(self, bit_array):
         dec = bitarray(self.image).decode(self.dictionary)
@@ -514,8 +512,6 @@ class Decompression:
 
             out_temp = [int(r)] * int(l)
             out_array += out_temp
-
-        print('out_array_len optimized: ', len(out_array))
 
         return out_array
 

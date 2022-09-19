@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 from gui.util_gui import calculate_size
 from gui.util_gui import convert_bits
 from jpeg.decompression import *
@@ -9,6 +10,8 @@ from jpeg.dictionary_util import *
 class ResultWindow:
 
     def __init__(self, root, filename, decompressed_image, color_space, size_old, size_new):
+        self.w = None
+        self.h = None
         self.new_image = None
         self.disp_old_image = None
         self.old_image = None
@@ -80,10 +83,10 @@ class ResultWindow:
         self.image_label4.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # new compression button
-        # button = tk.Button(self.button_frame, text="Return", padx=10, pady=10, fg="white", bg="#263D42")
-        # button.configure(command=self.change_canvas, height=2, width=10)
-        # button.pack(side=tk.BOTTOM)
-        #
+        button = tk.Button(self.button_frame, text="Return", padx=10, pady=10, fg="white", bg="#263D42")
+        button.configure(command=self.change_canvas, height=2, width=10)
+        button.pack(side=tk.BOTTOM)
+
         # histo button
         histo_button = tk.Button(self.button_frame, text="Info", padx=10, pady=10, fg="white", bg="#263D42")
         histo_button.configure(command=self.display_images, height=2, width=10)
@@ -98,6 +101,7 @@ class ResultWindow:
 
         self.old_image = Image.open(self.filename)
         w, h = self.old_image.size
+        self.h, self.w = h, w
         w, h = calculate_size(self.image_width, self.image_height, w, h)
 
         self.old_image = self.old_image.resize((w, h), Image.ANTIALIAS)
@@ -128,3 +132,24 @@ class ResultWindow:
                                         relief='ridge')
         self.new_img_canvas.create_image(0, 0, anchor=tk.NW, image=self.disp_new_image)
         self.new_img_canvas.pack()
+
+    def change_canvas(self):
+        self.canvas.destroy()
+        s = str(self.h) + 'x' + str(self.w) + ';'
+        from gui.chooseColorSpace import ChooseColorSpace
+        ChooseColorSpace(self.root, "../Examples/miner.jpg", s)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

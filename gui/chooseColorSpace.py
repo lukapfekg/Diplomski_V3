@@ -50,14 +50,14 @@ class ChooseColorSpace:
         # drop down menu
         self.options = ["RGB", "YCbCr444", "YCbCr420"]
         self.clicked = tk.StringVar()
-        self.clicked.set("YCbCr444")
-        # self.clicked.set("Choose color space")
+        # self.clicked.set("RGB")
+        self.clicked.set("Choose color space")
 
         self.drop = tk.OptionMenu(self.button_frame, self.clicked, *self.options)
         self.drop.config(width=20, font=("Roboto", 16, "bold"), foreground="#FFFFFF", background="#263D42")
         self.drop.pack()
 
-        button_dropdown = tk.Button(self.button_frame, text="JPEG", height=5, width=25, fg="white", bg="#263D42")
+        button_dropdown = tk.Button(self.button_frame, text="Choose", height=5, width=25, fg="white", bg="#263D42")
         button_dropdown.configure(command=self.accept_color_space)
         button_dropdown.pack(side=tk.BOTTOM, pady=10)
 
